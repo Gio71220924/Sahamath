@@ -1241,55 +1241,6 @@ seedBoardCache();
 fetchBoardList();
 setInterval(fetchBoardList, 24 * 60 * 60 * 1000); // refresh tiap 24 jam
 
-// ─── /bandarmology  →  Real broker flow from api-saham ───────────────────────
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-function handleBandarmology(ticker, fromParam, toParam, res) {
-    const today = new Date();
-    const defaultFrom = new Date(today);
-    defaultFrom.setDate(defaultFrom.getDate() - 7);
-
-    const fromStr = (fromParam && DATE_RE.test(fromParam)) ? fromParam : defaultFrom.toISOString().slice(0, 10);
-    const toStr   = (toParam   && DATE_RE.test(toParam))   ? toParam   : today.toISOString().slice(0, 10);
-
-    const params = new URLSearchParams({
-        symbol: ticker, from: fromStr, to: toStr,
-        include_orderflow: 'false', cache: 'off',
-    });
-
-    tvRequest({
-        hostname: 'api-saham.mkemalw.workers.dev',
-        path: `/cache-summary?${params}`,
-        method: 'GET',
-        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
-    }, null, (err, data) => {
-        if (err) { return sendJSON(res, 502, { error: err.message }); }
-
-        let lastPrice = null;
-        for (const entry of (data.history || [])) {
-            if (entry.data?.price) lastPrice = entry.data.price;
-        }
-
-        const mapBuyer = (b) => ({
-            code:     b.code,
-            type:     b.type || '',
-            netVal:   (b.bval || 0) - (b.sval || 0),
-            avgPrice: b.bvol > 0 ? Math.round((b.bval || 0) / b.bvol) : 0,
-        });
-        const mapSeller = (b) => ({
-            code:     b.code,
-            type:     b.type || '',
-            netVal:   (b.sval || 0) - (b.bval || 0),
-            avgPrice: b.svol > 0 ? Math.round((b.sval || 0) / b.svol) : 0,
-        });
-
-        const buyers  = (data.summary?.top_net_buyers  || []).slice(0, 5).map(mapBuyer);
-        const sellers = (data.summary?.top_net_sellers || []).slice(0, 5).map(mapSeller);
-
-        sendJSON(res, 200, { ticker, lastPrice, buyers, sellers });
-    });
-}
-
 // ─── /board  →  IDX papan pencatatan lookup ──────────────────────────────────
 function handleBoard(ticker, res) {
     const board = boardCache.get(ticker.toUpperCase()) || 'unknown';
@@ -2037,18 +1988,6 @@ const server = http.createServer((req, res) => {
         const ticker = validateTicker(parsed.query.ticker);
         if (!ticker) { sendJSON(res, 400, { error: 'Missing ?ticker=' }); return; }
         return handleBoard(ticker, res);
-    }
-
-    // API: /bandarmology
-    if (req.method === 'GET' && pathname === '/bandarmology') {
-        const ip = req.socket.remoteAddress;
-        if (isRateLimited(ip)) { sendJSON(res, 429, { error: 'Too many requests' }); return; }
-        const ticker = validateTicker(parsed.query.ticker);
-        if (!ticker) { sendJSON(res, 400, { error: 'Missing ?ticker=' }); return; }
-        const fromP = parsed.query.from || null;
-        const toP   = parsed.query.to   || null;
-        console.log(`[Band]   ${ticker} ${fromP || 'default'} → ${toP || 'today'}`);
-        return handleBandarmology(ticker, fromP, toP, res);
     }
 
     // API: /ml-predict

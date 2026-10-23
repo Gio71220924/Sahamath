@@ -1119,7 +1119,7 @@ function MarketCalendarWidget() {
 
 /* ---------- Tools grid (6 calculators) ---------- */
 const TOOLS = [
-  { id: 'analyzer', icon: 'chart',  title: 'Stock Analyzer',         tag: 'BANDARMOLOGY + AI', desc: 'Lacak smart money: net flow asing/lokal/retail, top broker buyer/seller, plus AI trading plan.' },
+  { id: 'analyzer', icon: 'chart',  title: 'Stock Analyzer',         tag: 'TEKNIKAL + AI', desc: 'Chart, fundamental, katalis AI, plus trading plan ATR dan kisaran harga 5 hari.' },
   { id: 'average',  icon: 'calc',   title: 'Average Price',          tag: 'PALING DIPAKAI',    desc: 'Hitung harga rata-rata setelah average down. Tau harga break-even-mu dalam sekejap.' },
   { id: 'araarb',   icon: 'arrows', title: 'ARA & ARB',              tag: 'AUTO-REJECT',       desc: 'Cek batas atas & bawah harga harian sesuai aturan IDX terbaru. Tier-1, Tier-2, Tier-3 auto.' },
   { id: 'profit',   icon: 'wallet', title: 'Profit Calc',            tag: 'NET P/L',           desc: 'Estimasi profit bersih setelah fee broker, levy, dan PPh. Plus breakeven price.' },

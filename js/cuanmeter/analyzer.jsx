@@ -1,5 +1,5 @@
 /* ============================================================
-   analyzer.jsx — Stock Analyzer (Bandarmology + AI demo).
+   analyzer.jsx — Stock Analyzer (ATR trading plan + AI).
    Generates deterministic mock data per ticker so re-search
    yields the same result. NOT real market data.
    Exposes globals: Analyzer.
@@ -9,7 +9,6 @@ const { useState: useStateZ, useMemo: useMemoZ, useRef: useRefZ, useEffect: useE
 
 
 const POPULAR_TICKERS = ['BBRI', 'BBCA', 'TLKM', 'ASII', 'ANTM', 'BUMI', 'BMRI', 'GOTO', 'ADRO'];
-const BROKER_CODES = ['MG', 'CC', 'YP', 'RG', 'BR', 'AT', 'GR', 'CS', 'KZ', 'NI', 'DH', 'YU'];
 
 const SCREENER_TICKERS = [
   'ADRO','AKRA','BUMI','BYAN','DEWA','DSSA',
@@ -54,25 +53,6 @@ function generateAnalysis(ticker) {
   const prevPrice = Math.round(candles[candles.length - 2].close / tickSize) * tickSize;
   const chgPct = ((lastPrice - prevPrice) / prevPrice) * 100;
 
-  // top buyers & sellers
-  const buyers = BROKER_CODES.slice(0, 8)
-    .map((c) => ({
-      code: c,
-      netVal: (rand() * 60 + 10) * 1e9,
-      avgPrice: lastPrice + (rand() - 0.6) * basePrice * 0.02,
-    }))
-    .sort((a, b) => b.netVal - a.netVal)
-    .slice(0, 5);
-
-  const sellers = BROKER_CODES.slice(4, 12)
-    .map((c) => ({
-      code: c,
-      netVal: (rand() * 60 + 10) * 1e9,
-      avgPrice: lastPrice + (rand() - 0.4) * basePrice * 0.02,
-    }))
-    .sort((a, b) => b.netVal - a.netVal)
-    .slice(0, 5);
-
   // AI plan
   const isBullish = rand() > 0.45;
   const entry = lastPrice;
@@ -93,8 +73,6 @@ function generateAnalysis(ticker) {
     lastPrice,
     chgPct,
     candles,
-    buyers,
-    sellers,
     plan: { entry, tp, sl, signal, winRate, strength, isBullish },
   };
 }
@@ -147,100 +125,6 @@ function CandleChart({ data, height = 360 }) {
         );
       })}
     </svg>
-  );
-}
-
-/* ---------- Broker table ---------- */
-function BrokerTable({ title, subtitle, list, color, icon }) {
-  const cellTh = {
-    padding: '10px 20px',
-    fontSize: 11,
-    fontWeight: 700,
-    color: 'var(--fg-muted)',
-    textTransform: 'uppercase',
-    letterSpacing: '0.06em',
-  };
-  return (
-    <div className="card broker-card" style={{ padding: 0, overflow: 'hidden' }}>
-      <div
-        style={{
-          padding: '16px 20px',
-          borderBottom: '1px solid var(--border)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-        }}
-      >
-        <span style={{ color }}>
-          <Icon name={icon} size={18} />
-        </span>
-        <div>
-          <div style={{ fontWeight: 800, color }}>{title}</div>
-          <div
-            style={{
-              fontSize: 11,
-              color: 'var(--fg-muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-              fontWeight: 700,
-            }}
-          >
-            {subtitle}
-          </div>
-        </div>
-      </div>
-      <table className="broker-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ background: 'var(--surface-2)' }}>
-            <th style={{ ...cellTh, textAlign: 'left' }}>Broker</th>
-            <th style={{ ...cellTh, textAlign: 'right' }}>Net Value</th>
-            <th style={{ ...cellTh, textAlign: 'right' }}>Avg Price</th>
-          </tr>
-        </thead>
-        <tbody>
-          {list.map((b, i) => (
-            <tr key={i} style={{ borderTop: '1px solid var(--border)' }}>
-              <td className="broker-cell-code" style={{ padding: '12px 20px' }}>
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 36,
-                    height: 28,
-                    background: 'var(--surface-2)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-sm)',
-                    fontFamily: 'JetBrains Mono, monospace',
-                    fontWeight: 800,
-                    fontSize: 12,
-                  }}
-                >
-                  {b.code}
-                </span>
-              </td>
-              <td
-                className="mono tnum broker-cell-value"
-                style={{ padding: '12px 20px', textAlign: 'right', fontWeight: 700, color }}
-              >
-                Rp {fmt.compact(b.netVal)}
-              </td>
-              <td
-                className="mono tnum broker-cell-price"
-                style={{
-                  padding: '12px 20px',
-                  textAlign: 'right',
-                  color: 'var(--fg-muted)',
-                  fontWeight: 600,
-                }}
-              >
-                Rp {Math.round(b.avgPrice).toLocaleString('id-ID')}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
   );
 }
 
@@ -953,16 +837,10 @@ function Analyzer({ initialTicker }) {
   const [loading, setLoading] = useStateZ(false);
   const [mlData, setMlData] = useStateZ(null);
   const [mlLoading, setMlLoading] = useStateZ(false);
-  const [bandData, setBandData] = useStateZ(null);
   const [suggestions, setSuggestions] = useStateZ([]);
   const [showSugg, setShowSugg] = useStateZ(false);
   const debounceRef = useRefZ(null);
 
-  const todayStr = () => new Date().toISOString().slice(0, 10);
-  const daysAgoStr = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
-  const [bandFrom, setBandFrom] = useStateZ(() => daysAgoStr(7));
-  const [bandTo,   setBandTo]   = useStateZ(() => todayStr());
-  const activeBand = useRefZ('');
   const [tvPrice, setTvPrice] = useStateZ(null);
   const activePrice = useRefZ('');
   const [fundData, setFundData] = useStateZ(null);
@@ -988,16 +866,6 @@ function Analyzer({ initialTicker }) {
       .then((r) => r.json())
       .then((d) => { if (activePrice.current === code && d.price) setTvPrice(d); })
       .catch(() => {});
-  };
-
-  const fetchBandarmology = (code, from, to) => {
-    activeBand.current = code;
-    setBandData(null);
-    const url = `/bandarmology?ticker=${code}&from=${from}&to=${to}`;
-    fetch(url)
-      .then((r) => r.json())
-      .then((d) => { if (activeBand.current === code) setBandData(d.buyers ? d : null); })
-      .catch(() => { if (activeBand.current === code) setBandData(null); });
   };
 
   const fetchFundamentals = (code) => {
@@ -1028,7 +896,7 @@ function Analyzer({ initialTicker }) {
 
   const data = useMemoZ(() => generateAnalysis(active), [active]);
 
-  useEffectZ(() => { fetchTVPrice('BBRI'); fetchBandarmology('BBRI', bandFrom, bandTo); fetchFundamentals('BBRI'); fetchAiAnalysis('BBRI'); }, []);
+  useEffectZ(() => { fetchTVPrice('BBRI'); fetchFundamentals('BBRI'); fetchAiAnalysis('BBRI'); }, []);
 
   const onSearchInput = (val) => {
     setTicker(val);
@@ -1048,7 +916,6 @@ function Analyzer({ initialTicker }) {
     setLoading(true);
     setMlData(null);
     setMlLoading(true);
-    setBandData(null);
     setSuggestions([]);
     setShowSugg(false);
     setTicker(code);
@@ -1058,7 +925,6 @@ function Analyzer({ initialTicker }) {
       .then((r) => r.json())
       .then((d) => { setMlData(d); setMlLoading(false); })
       .catch(() => { setMlData({ status: 'offline' }); setMlLoading(false); });
-    fetchBandarmology(code, bandFrom, bandTo);
     fetchFundamentals(code);
     fetchAiAnalysis(code);
   };
@@ -1093,7 +959,7 @@ function Analyzer({ initialTicker }) {
   return (
     <CalcScreen
       icon="chart"
-      tag="ANALYZER · BANDARMOLOGY + AI"
+      tag="ANALYZER · TEKNIKAL + AI"
       title={
         <>
           Lacak <span style={{ color: 'var(--primary)' }}>smart money</span>
@@ -1101,7 +967,7 @@ function Analyzer({ initialTicker }) {
           per saham IDX.
         </>
       }
-      subtitle="Top broker buyer/seller, fundamental, plus trading plan (entry/TP/SL) dari ATR. Cek siapa yang akumulasi sebelum lo masuk."
+      subtitle="Chart, fundamental, katalis AI, plus trading plan (entry/TP/SL) dari ATR. Cek risikonya sebelum lo masuk."
     >
       {/* search bar */}
       <div style={{ marginBottom: 24, position: 'relative' }}>
@@ -1377,70 +1243,6 @@ function Analyzer({ initialTicker }) {
 
       </div>
 
-      {/* broker tables — date range picker */}
-      <div
-        className="band-filter-row"
-        style={{
-          display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10,
-          marginBottom: 12, padding: '10px 16px',
-          background: 'var(--surface-2)', border: '1px solid var(--border)',
-          borderRadius: 'var(--radius)',
-        }}
-      >
-        <Icon name="chart" size={16} />
-        <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-          Rentang Data
-        </span>
-        <input
-          type="date"
-          value={bandFrom}
-          max={bandTo}
-          onChange={(e) => setBandFrom(e.target.value)}
-          className="input"
-          style={{ padding: '6px 10px', fontSize: 13, width: 'auto' }}
-        />
-        <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>s/d</span>
-        <input
-          type="date"
-          value={bandTo}
-          min={bandFrom}
-          max={todayStr()}
-          onChange={(e) => setBandTo(e.target.value)}
-          className="input"
-          style={{ padding: '6px 10px', fontSize: 13, width: 'auto' }}
-        />
-        <button
-          className="btn btn-secondary"
-          style={{ padding: '6px 14px', fontSize: 13 }}
-          onClick={() => active && fetchBandarmology(active, bandFrom, bandTo)}
-        >
-          Perbarui
-        </button>
-        {bandData && (
-          <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--success)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} />
-            Data live · {bandFrom} s/d {bandTo}
-          </span>
-        )}
-      </div>
-
-      <div className="calc-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <BrokerTable
-          title="Top Buyer"
-          subtitle={bandData ? `Live · ${bandFrom} s/d ${bandTo}` : mlData?.bandarmology ? 'Live · ML (7 hari)' : 'Akumulasi terbesar'}
-          list={bandData ? bandData.buyers : (mlData?.bandarmology?.top_buyers ?? data.buyers)}
-          color="var(--success)"
-          icon="rocket"
-        />
-        <BrokerTable
-          title="Top Seller"
-          subtitle={bandData ? `Live · ${bandFrom} s/d ${bandTo}` : mlData?.bandarmology ? 'Live · ML (7 hari)' : 'Distribusi terbesar'}
-          list={bandData ? bandData.sellers : (mlData?.bandarmology?.top_sellers ?? data.sellers)}
-          color="var(--danger)"
-          icon="arrow_left"
-        />
-      </div>
-
       <div
         style={{
           marginTop: 24,
@@ -1457,7 +1259,7 @@ function Analyzer({ initialTicker }) {
           <Icon name="info" size={18} />
         </span>
         <div style={{ fontSize: 13, color: 'var(--fg-muted)', lineHeight: 1.55 }}>
-          <strong style={{ color: 'var(--fg)' }}>Disclaimer:</strong> Data bandarmology dari api-saham. Trading Plan berupa level risiko dari ATR dan volatilitas — bukan prediksi arah atau rekomendasi beli/jual. DYOR.
+          <strong style={{ color: 'var(--fg)' }}>Disclaimer:</strong> Trading Plan berupa level risiko dari ATR dan volatilitas — bukan prediksi arah atau rekomendasi beli/jual. DYOR.
         </div>
       </div>
       </>)}

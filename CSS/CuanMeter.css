@@ -3029,24 +3029,6 @@ body[data-theme="dark"] .arena-mini-seg button.on {
     overflow-wrap: anywhere;
     word-break: break-word;
   }
-  .band-filter-row {
-    align-items: stretch !important;
-    padding: 12px !important;
-  }
-  .band-filter-row .input {
-    flex: 1 1 130px;
-    width: 100% !important;
-  }
-  .band-filter-row .btn {
-    flex: 1 1 100%;
-    justify-content: center;
-  }
-  .band-filter-row > span:last-child {
-    flex: 1 1 100%;
-    margin-left: 0 !important;
-    justify-content: center;
-    text-align: center;
-  }
 
   /* Collapse 2-column calendar grid */
   .market-calendar-grid {

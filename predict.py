@@ -3,9 +3,7 @@ import json
 import warnings
 import pandas as pd
 import numpy as np
-import requests
 import yfinance as yf
-from datetime import datetime, timedelta
 
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -218,62 +216,6 @@ def build_trading_plan(last_price, atr_val):
     }
 
 
-# ─── Bandarmology Fetch ───────────────────────────────────────────────────────
-
-def fetch_bandarmology(ticker):
-    """Ambil top broker dari api-saham. Return None jika gagal."""
-    try:
-        today     = datetime.now().strftime('%Y-%m-%d')
-        from_date = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
-        url = (
-            f"https://api-saham.mkemalw.workers.dev/cache-summary"
-            f"?symbol={ticker}&from={from_date}&to={today}"
-            f"&include_orderflow=false&cache=off"
-        )
-        resp = requests.get(url, timeout=5)
-        resp.raise_for_status()
-        data = resp.json()
-
-        last_price  = None
-        for entry in data.get('history', []):
-            if entry.get('data', {}).get('price'):
-                last_price = entry['data']['price']
-
-        def map_buyer(b):
-            bval = float(b.get('bval') or 0)
-            sval = float(b.get('sval') or 0)
-            bvol = float(b.get('bvol') or 0)
-            return {
-                'code':     b.get('code', ''),
-                'type':     b.get('type', ''),
-                'netVal':   round(bval - sval, 0),
-                'avgPrice': round(bval / bvol) if bvol > 0 else 0,
-            }
-
-        def map_seller(b):
-            bval = float(b.get('bval') or 0)
-            sval = float(b.get('sval') or 0)
-            svol = float(b.get('svol') or 0)
-            return {
-                'code':     b.get('code', ''),
-                'type':     b.get('type', ''),
-                'netVal':   round(sval - bval, 0),
-                'avgPrice': round(sval / svol) if svol > 0 else 0,
-            }
-
-        buyers  = [map_buyer(b)  for b in data.get('summary', {}).get('top_net_buyers',  [])[:5]]
-        sellers = [map_seller(b) for b in data.get('summary', {}).get('top_net_sellers', [])[:5]]
-
-        return {
-            'last_price':  last_price,
-            'top_buyers':  buyers,
-            'top_sellers': sellers,
-        }
-
-    except Exception:
-        return None
-
-
 # ─── Main Prediction ──────────────────────────────────────────────────────────
 
 def get_prediction(ticker):
@@ -308,7 +250,6 @@ def get_prediction(ticker):
         history_df = df.tail(60)
         last_price = float(df['Close'].iloc[-1])
         atr_val    = float(df['ATR'].iloc[-1])
-        band = fetch_bandarmology(ticker)
         last = df.iloc[-1]
         bb_pos = (
             "Overbought" if float(last['Close']) > float(last['BB_UPPER'])
@@ -348,7 +289,6 @@ def get_prediction(ticker):
             "trading_plan": plan,
             "price_range": price_range(df['Close'], 5),
             "indicators":  indicators,
-            "bandarmology":  band,
             "chart_history": chart_data,
         }
 

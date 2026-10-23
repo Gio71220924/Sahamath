@@ -21,12 +21,6 @@ status = 200
 force = true
 
 [[redirects]]
-from = "/bandarmology"
-to = "https://sahamath-production.up.railway.app/bandarmology"
-status = 200
-force = true
-
-[[redirects]]
 from = "/ml-predict"
 to = "https://sahamath-production.up.railway.app/ml-predict"
 status = 200

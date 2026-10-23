@@ -6,7 +6,7 @@
 
 <p align="center">Kalkulator &amp; simulasi saham IDX untuk trader Indonesia.</p>
 
-Sahamath adalah web kalkulator saham yang mudah dipakai untuk trader Indonesia. Mulai dari menghitung average price, batas ARA/ARB, profit/loss, position sizing, dividen, sampai membaca market calendar, bandarmology, screener swing, dan Analyzer ML.
+Sahamath adalah web kalkulator saham yang mudah dipakai untuk trader Indonesia. Mulai dari menghitung average price, batas ARA/ARB, profit/loss, position sizing, dividen, sampai membaca market calendar, screener swing, dan Analyzer.
 
 > Bukan rekomendasi beli atau jual. Semua hasil kalkulator, screener, dan model ML dipakai sebagai alat bantu analisis. Tetap lakukan riset mandiri.
 
@@ -17,7 +17,7 @@ Sahamath adalah web kalkulator saham yang mudah dipakai untuk trader Indonesia. 
 - **Profit/Loss**: menghitung profit bersih setelah fee beli, fee jual, dan pajak.
 - **Amunisi**: menghitung position sizing berdasarkan risiko per trade.
 - **Dividen Yield**: menghitung yield dividen kotor dan bersih setelah PPh final.
-- **Analyzer**: membaca harga, bandarmology, chart, trading plan, dan sinyal ML.
+- **Analyzer**: membaca harga, chart, fundamental, trading plan ATR, dan kisaran harga 5 hari.
 - **Analisis AI**: ringkasan sentimen dan katalis per emiten dari berita Google News, dirangkai oleh Gemini (butuh `GEMINI_API_KEY`).
 - **Screener IDX Energy**: mendeteksi kandidat swing dengan skor trend, VSA, entry, target price, dan stop loss. Termasuk strategi Triple Confirmation (RSI + MACD + MA20).
 - **Profil Risiko**: kuis singkat menentukan profil risiko, lalu merekomendasikan alokasi portofolio berbasis Modern Portfolio Theory (Sharpe + Markowitz) lengkap dengan efficient frontier.
@@ -42,7 +42,7 @@ Sahamath memakai frontend ringan berbasis React tanpa bundler production yang ko
 1. Pengguna membuka Sahamath di browser.
 2. Frontend menampilkan halaman kalkulator, Analyzer, Screener, Market Calendar, atau Panduan Edukasi.
 3. Untuk kalkulator sederhana seperti Average, Profit, Amunisi, dan Dividen, perhitungan dilakukan langsung di browser.
-4. Untuk data saham seperti harga, papan pencatatan, calendar, bandarmology, Analyzer, dan Screener, frontend meminta data ke backend Node.js.
+4. Untuk data saham seperti harga, papan pencatatan, calendar, Analyzer, dan Screener, frontend meminta data ke backend Node.js.
 5. Backend mengambil data dari sumber eksternal seperti TradingView, KSEI, IDX, api-saham, atau Yahoo Finance.
 6. Untuk Analyzer ML dan Screener, backend menjalankan script Python, membaca model `.pkl`, lalu mengembalikan hasil analisis ke frontend.
 7. Frontend menampilkan hasil dalam bentuk trading plan, score, entry, target price, stop loss, broker flow, dan calendar event.
