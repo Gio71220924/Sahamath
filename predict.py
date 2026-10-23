@@ -171,17 +171,36 @@ def safe_float(val, digits=4):
 
 
 RANGE_Z = 1.2816  # z-score P90 distribusi normal; P10 = -RANGE_Z
+# HAR (varian har_mix) dari train_vol.py: intercept, log RV 1 hari, 5 hari, 22 hari.
+# Re-fit tiap ~tahun: python train_vol.py
+HAR_BETA = (-1.367, 0.2171, 0.2522, 0.3481)
+HAR_SCALE = 1.0314  # kalibrasi supaya P10-P90 kena 80%
 
 
-def price_range(close, horizon):
-    """Kisaran harga P10-P90 `horizon` hari: lognormal dari volatilitas 20 hari (= Monte Carlo GBM
-    tanpa simulasi). Walk-forward di 560 saham IDX (train_range.py): coverage 80.4%,
-    lebih terkalibrasi dari LightGBM quantile (69.9%) dan kuantil historis (74.2%)."""
-    vol = np.log(close).diff().tail(20).std()
+def har_sigma(ohlcv):
+    """Sigma harian HAR (Corsi 2009), RV harian = rata-rata Garman-Klass(+gap) dan return close².
+    Walk-forward 15 kuartal (train_vol.py), saham holdout: Winkler +4.4% vs vol close-to-close,
+    +3.6% setelah gerak besar, menang 15/15 fold. GK saja meremehkan hari tren (ARA/ARB)."""
+    df = ohlcv[ohlcv["Volume"] > 0]  # hari tanpa transaksi (O=H=L=C hasil ffill) bukan volatilitas
+    if len(df) < 23:
+        return np.nan
+    o, h, l, c = (np.log(df[k]) for k in ["Open", "High", "Low", "Close"])
+    gk = (o - c.shift(1)) ** 2 + 0.5 * (h - l) ** 2 - (2 * np.log(2) - 1) * (c - o) ** 2
+    rv = (0.5 * (gk + c.diff() ** 2)).clip(lower=1e-8)
+    x = np.log([rv.iloc[-1], rv.tail(5).mean(), rv.tail(22).mean()])
+    return HAR_SCALE * np.sqrt(np.exp(HAR_BETA[0] + np.dot(HAR_BETA[1:], x)))
+
+
+def price_range(ohlcv, horizon):
+    """Kisaran harga P10-P90 `horizon` hari: lognormal tanpa drift (= Monte Carlo GBM tanpa simulasi),
+    sigma dari HAR. Fallback ke vol close-to-close 20 hari kalau data OHLC kurang."""
+    vol = har_sigma(ohlcv)
+    if not np.isfinite(vol) or vol <= 0:
+        vol = np.log(ohlcv["Close"]).diff().tail(20).std()
     if not np.isfinite(vol) or vol <= 0:
         return None
     spread = RANGE_Z * vol * np.sqrt(horizon)
-    last = float(close.iloc[-1])
+    last = float(ohlcv["Close"].iloc[-1])
     return {
         "horizon": horizon,
         "confidence": 0.8,
@@ -240,6 +259,9 @@ def get_prediction(ticker):
         df.ffill(inplace=True)
         df.bfill(inplace=True)
 
+        # OHLCV mentah untuk kisaran harga: HAR butuh 22+ hari, dropna indikator (MA50) memotong data
+        ohlcv = df[['Open', 'High', 'Low', 'Close', 'Volume']].copy()
+
         # 2. Hitung indikator + market regime
         df = calculate_indicators(df)
         df = add_market_features(df, fetch_market_history())
@@ -289,7 +311,7 @@ def get_prediction(ticker):
             "ticker":      ticker.upper(),
             "market":      market_context,
             "trading_plan": plan,
-            "price_range": price_range(df['Close'], 5),
+            "price_range": price_range(ohlcv, 5),
             "indicators":  indicators,
             "chart_history": chart_data,
         }

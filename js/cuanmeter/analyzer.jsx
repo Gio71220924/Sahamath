@@ -710,7 +710,7 @@ function PriceRangeCard({ r }) {
         </span>
       </div>
       <div style={{ fontSize: 11, color: 'var(--fg-muted)', marginTop: 6, lineHeight: 1.5 }}>
-        Dari volatilitas 20 hari: 8 dari 10 kali, harga {r.horizon} hari ke depan ada di kisaran ini. Ini ukuran risiko, bukan arah.
+        Dari volatilitas harian, mingguan, dan bulanan (HAR): 8 dari 10 kali, harga {r.horizon} hari ke depan ada di kisaran ini. Ini ukuran risiko, bukan arah.
       </div>
     </div>
   );
