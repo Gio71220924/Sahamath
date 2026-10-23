@@ -212,7 +212,9 @@ def build_trading_plan(last_price, atr_val):
         "stop_loss": round(last_price - atr_val * 1.5, 0),
         "tp_percent": round(atr_val * 2 / last_price * 100, 2),
         "sl_percent": round(-atr_val * 1.5 / last_price * 100, 2),
-        "note": "Kalau mau entry: TP 2× ATR, SL 1.5× ATR (RR 1.33). Ini level risiko, bukan sinyal beli.",
+        # Base rate dari train_tp.py (±294rb plan IDX 2022-2026, 10 hari bursa, walk-forward)
+        "note": ("TP 2× ATR, SL 1.5× ATR (RR 1.33). Historis IDX, 10 hari: kena TP duluan ~28%, "
+                 "SL duluan ~37%, belum kena ~34%. Level risiko, bukan sinyal beli."),
     }
 
 
