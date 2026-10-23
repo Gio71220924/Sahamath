@@ -1,0 +1,39 @@
+# Kolektor data riset harian (scripts/collect_daily.py): judul berita top-100 saham + arsip
+# kepemilikan bulanan KSEI. Hasilnya di-commit ke branch `data`, bukan main, supaya tidak
+# memicu deploy Railway/Vercel dan history main tetap bersih.
+name: collect-data
+on:
+  schedule:
+    - cron: '0 11 * * *'     # tiap hari 11:00 UTC (18:00 WIB, setelah bursa tutup)
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: collect-data
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests
+      - name: switch to data branch
+        run: |
+          cp scripts/collect_daily.py "$RUNNER_TEMP/"
+          if git ls-remote --exit-code --heads origin data; then
+            git checkout data
+          else
+            git checkout --orphan data
+            git rm -rfq .
+          fi
+      - run: python "$RUNNER_TEMP/collect_daily.py" .
+      - name: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add news ksei
+          git diff --staged --quiet || git commit -m "data: collect $(date -u +%F)"
+          git push origin data
