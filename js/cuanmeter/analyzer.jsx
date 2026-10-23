@@ -54,15 +54,6 @@ function generateAnalysis(ticker) {
   const prevPrice = Math.round(candles[candles.length - 2].close / tickSize) * tickSize;
   const chgPct = ((lastPrice - prevPrice) / prevPrice) * 100;
 
-  // money flows
-  const totalVolValue = (rand() * 800 + 200) * 1e9;
-  const foreignBias = (rand() - 0.5) * 2;
-  const localBias = (rand() - 0.5) * 1.5;
-  const retailBias = -(foreignBias * 0.6 + localBias * 0.4); // retail balances institutions
-  const netForeign = foreignBias * totalVolValue * 0.3;
-  const netLocal = localBias * totalVolValue * 0.25;
-  const netRetail = retailBias * totalVolValue * 0.4;
-
   // top buyers & sellers
   const buyers = BROKER_CODES.slice(0, 8)
     .map((c) => ({
@@ -83,7 +74,7 @@ function generateAnalysis(ticker) {
     .slice(0, 5);
 
   // AI plan
-  const isBullish = foreignBias + localBias > -retailBias * 0.5;
+  const isBullish = rand() > 0.45;
   const entry = lastPrice;
   const tp = Math.round((entry * (1 + (isBullish ? 0.06 : 0.04))) / tickSize) * tickSize;
   const sl = Math.round((entry * (1 - (isBullish ? 0.025 : 0.04))) / tickSize) * tickSize;
@@ -102,9 +93,6 @@ function generateAnalysis(ticker) {
     lastPrice,
     chgPct,
     candles,
-    netForeign,
-    netLocal,
-    netRetail,
     buyers,
     sellers,
     plan: { entry, tp, sl, signal, winRate, strength, isBullish },
@@ -159,63 +147,6 @@ function CandleChart({ data, height = 360 }) {
         );
       })}
     </svg>
-  );
-}
-
-/* ---------- Net flow card ---------- */
-function FlowCard({ icon, label, value, color, live }) {
-  const positive = value >= 0;
-  return (
-    <div className="card" style={{ padding: 22, position: 'relative', overflow: 'hidden' }}>
-      <div
-        style={{
-          position: 'absolute',
-          top: -30,
-          right: -30,
-          width: 100,
-          height: 100,
-          borderRadius: '50%',
-          background: color,
-          opacity: 0.08,
-        }}
-      />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <span style={{ color }}>
-          <Icon name={icon} size={18} />
-        </span>
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 800,
-            letterSpacing: '0.08em',
-            color: 'var(--fg-muted)',
-            textTransform: 'uppercase',
-          }}
-        >
-          {label}
-        </span>
-        {live && (
-          <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--success)', fontWeight: 700 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)', display: 'inline-block' }} />
-            LIVE
-          </span>
-        )}
-      </div>
-      <div
-        className="mono tnum"
-        style={{
-          fontSize: 24,
-          fontWeight: 800,
-          letterSpacing: '-0.02em',
-          color: positive ? 'var(--success)' : 'var(--danger)',
-        }}
-      >
-        {positive ? '+' : '−'}Rp {fmt.compact(Math.abs(value))}
-      </div>
-      <div style={{ fontSize: 12, color: 'var(--fg-muted)', fontWeight: 700, marginTop: 4 }}>
-        {positive ? 'Akumulasi' : 'Distribusi'}
-      </div>
-    </div>
   );
 }
 
@@ -1170,7 +1101,7 @@ function Analyzer({ initialTicker }) {
           per saham IDX.
         </>
       }
-      subtitle="Net flow asing/lokal/retail, top broker buyer/seller, plus AI trading plan (entry/TP/SL). Cek siapa yang akumulasi sebelum lo masuk."
+      subtitle="Top broker buyer/seller, fundamental, plus trading plan (entry/TP/SL) dari ATR. Cek siapa yang akumulasi sebelum lo masuk."
     >
       {/* search bar */}
       <div style={{ marginBottom: 24, position: 'relative' }}>
@@ -1356,19 +1287,6 @@ function Analyzer({ initialTicker }) {
       </div>
 
       <FundamentalCard data={fundData} loading={fundLoading} />
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: 12,
-          marginBottom: 16,
-        }}
-      >
-        <FlowCard icon="rocket"  label="Net Foreign" value={bandData ? bandData.netForeign : (mlData?.bandarmology?.net_foreign ?? data.netForeign)} color="#4d8fff" live={!!(bandData || mlData?.bandarmology)} />
-        <FlowCard icon="diamond" label="Net Local"   value={bandData ? bandData.netLocal   : (mlData?.bandarmology?.net_local   ?? data.netLocal)}   color="#a855f7" live={!!(bandData || mlData?.bandarmology)} />
-        <FlowCard icon="star"    label="Net Retail"  value={bandData ? bandData.netRetail  : (mlData?.bandarmology?.net_retail  ?? data.netRetail)}  color="#f59e0b" live={!!(bandData || mlData?.bandarmology)} />
-      </div>
 
       {/* Trading Plan (ATR) */}
       <div

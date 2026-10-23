@@ -1265,9 +1265,6 @@ function handleBandarmology(ticker, fromParam, toParam, res) {
     }, null, (err, data) => {
         if (err) { return sendJSON(res, 502, { error: err.message }); }
 
-        const netForeign = data.summary?.foreign?.net_val ?? 0;
-        const netLocal   = data.summary?.local?.net_val   ?? 0;
-        const netRetail  = data.summary?.retail?.net_val  ?? 0;
         let lastPrice = null;
         for (const entry of (data.history || [])) {
             if (entry.data?.price) lastPrice = entry.data.price;
@@ -1289,7 +1286,7 @@ function handleBandarmology(ticker, fromParam, toParam, res) {
         const buyers  = (data.summary?.top_net_buyers  || []).slice(0, 5).map(mapBuyer);
         const sellers = (data.summary?.top_net_sellers || []).slice(0, 5).map(mapSeller);
 
-        sendJSON(res, 200, { ticker, netForeign, netLocal, netRetail, lastPrice, buyers, sellers });
+        sendJSON(res, 200, { ticker, lastPrice, buyers, sellers });
     });
 }
 

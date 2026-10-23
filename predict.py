@@ -221,7 +221,7 @@ def build_trading_plan(last_price, atr_val):
 # ─── Bandarmology Fetch ───────────────────────────────────────────────────────
 
 def fetch_bandarmology(ticker):
-    """Ambil net foreign flow + top broker dari api-saham. Return None jika gagal."""
+    """Ambil top broker dari api-saham. Return None jika gagal."""
     try:
         today     = datetime.now().strftime('%Y-%m-%d')
         from_date = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
@@ -234,10 +234,6 @@ def fetch_bandarmology(ticker):
         resp.raise_for_status()
         data = resp.json()
 
-        summary     = data.get('summary', {})
-        net_foreign = float(summary.get('foreign', {}).get('net_val', 0) or 0)
-        net_local   = float(summary.get('local',   {}).get('net_val', 0) or 0)
-        net_retail  = float(summary.get('retail',  {}).get('net_val', 0) or 0)
         last_price  = None
         for entry in data.get('history', []):
             if entry.get('data', {}).get('price'):
@@ -269,9 +265,6 @@ def fetch_bandarmology(ticker):
         sellers = [map_seller(b) for b in data.get('summary', {}).get('top_net_sellers', [])[:5]]
 
         return {
-            'net_foreign': round(net_foreign, 0),
-            'net_local':   round(net_local,   0),
-            'net_retail':  round(net_retail,  0),
             'last_price':  last_price,
             'top_buyers':  buyers,
             'top_sellers': sellers,
