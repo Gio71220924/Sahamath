@@ -1,9 +1,7 @@
 pandas
 numpy
-scikit-learn
 yfinance
 ta
-joblib
 requests
 scipy
 curl_cffi

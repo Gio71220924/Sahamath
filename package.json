@@ -5,7 +5,6 @@
     "scripts": {
         "build": "node scripts/build-bundle.js",
         "build:static": "node scripts/build-static.js",
-        "download:model": "node scripts/download-model.js",
         "refresh:ipo": "node scripts/refresh-ipo.js",
         "serve:dist": "node dist/server.js",
         "test": "npm run test:ipo && npm run test:arena",

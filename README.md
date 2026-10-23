@@ -32,9 +32,8 @@ Sahamath memakai frontend ringan berbasis React tanpa bundler production yang ko
 - **Frontend**: React UMD, ReactDOM UMD, Babel Standalone, HTML, CSS, JavaScript.
 - **UI styling**: CSS custom properties, responsive layout, dark/light theme support.
 - **Backend**: Node.js HTTP server lewat `server.js`.
-- **ML runtime**: Python untuk menjalankan `predict.py` dan `screener.py`.
-- **Model ML**: `best_models.pkl` sebagai model utama, dengan fallback ke `trading_model.pkl`.
-- **Data market**: TradingView, api-saham, Yahoo Finance, KSEI, IDX, BI, BPS, curated IPO calendar/RSS, serta Google News + Gemini (Analisis AI).
+- **Python runtime**: `predict.py` (trading plan ATR + kisaran harga 5 hari) dan `screener.py` (swing setup). Tanpa model ML.
+- **Data market**: TradingView, Yahoo Finance, KSEI, IDX, BI, BPS, curated IPO calendar/RSS, serta Google News + Gemini (Analisis AI).
 - **Portfolio optimizer**: `portfolio.py` (Modern Portfolio Theory) memakai numpy + scipy.
 
 ## Alur Sederhana Aplikasi
@@ -43,9 +42,9 @@ Sahamath memakai frontend ringan berbasis React tanpa bundler production yang ko
 2. Frontend menampilkan halaman kalkulator, Analyzer, Screener, Market Calendar, atau Panduan Edukasi.
 3. Untuk kalkulator sederhana seperti Average, Profit, Amunisi, dan Dividen, perhitungan dilakukan langsung di browser.
 4. Untuk data saham seperti harga, papan pencatatan, calendar, Analyzer, dan Screener, frontend meminta data ke backend Node.js.
-5. Backend mengambil data dari sumber eksternal seperti TradingView, KSEI, IDX, api-saham, atau Yahoo Finance.
-6. Untuk Analyzer ML dan Screener, backend menjalankan script Python, membaca model `.pkl`, lalu mengembalikan hasil analisis ke frontend.
-7. Frontend menampilkan hasil dalam bentuk trading plan, score, entry, target price, stop loss, broker flow, dan calendar event.
+5. Backend mengambil data dari sumber eksternal seperti TradingView, KSEI, IDX, atau Yahoo Finance.
+6. Untuk Analyzer dan Screener, backend menjalankan script Python (indikator teknikal, ATR, volatilitas) lalu mengembalikan hasilnya ke frontend.
+7. Frontend menampilkan hasil dalam bentuk trading plan, kisaran harga, score, entry, target price, stop loss, dan calendar event.
 
 ## Menjalankan di Lokal
 
@@ -62,46 +61,31 @@ Buka:
 http://localhost:3000
 ```
 
-Untuk fitur Analyzer ML dan Screener, install dependency Python di virtual environment:
+Untuk fitur Analyzer dan Screener, install dependency Python di virtual environment:
 
 ```bash
-pip install pandas numpy scipy scikit-learn yfinance ta joblib requests
+pip install -r requirements.txt
 ```
 
-File model yang dibutuhkan:
+## Riset Model
 
-```text
-best_models.pkl
-```
+App tidak memakai model ML. Trading plan dihitung dari ATR dan kisaran harga dari volatilitas 20 hari. Script riset `train*.py` (walk-forward, fit di proxy IDX100, diuji juga di saham lain) dipakai untuk menguji apakah model layak dipasang:
 
-`trading_model.pkl` hanya fallback untuk format model lama.
+- `train.py`: stock picker LGBMRanker + HMM regime + faktor + fundamental. Tidak ada edge setelah fee.
+- `train_range.py`: kisaran harga. Volatilitas 20 hari (lognormal) mengalahkan kuantil historis dan LightGBM quantile.
+- `train_regime.py`: kisaran harga per regime HMM IHSG. Perbaikan hanya ~0.2%, tidak dipasang.
+- `train_tp.py`, `train_tp_lgbm.py`: peluang kena TP sebelum SL. Model tidak lebih baik dari rata-rata historis, jadi yang ditampilkan di app cuma base rate.
 
-## Model ML
-
-Runtime Analyzer dan Screener membaca model dari:
-
-```text
-best_models.pkl
-```
-
-Model terbaru memakai pendekatan universal-first:
-
-- satu model default untuk banyak saham;
-- fitur RS IHSG, VSA, trend, volatility, liquidity;
-- fallback ke model lama jika format lama masih tersedia.
-
-Karena model `.pkl` adalah artefak binary, jangan push ke repo public jika model ingin tetap private.
+Dependency training (tidak masuk `requirements.txt`): `pip install lightgbm hmmlearn scikit-learn`. Cache harga di `.cache/train/`.
 
 ## Deployment
 
-Rekomendasi deployment:
-
 ```text
-Netlify  -> frontend static
-Render   -> backend Node + Python + model ML
+Vercel   -> frontend static (vercel.json)
+Railway  -> backend Node + Python (Dockerfile)
 ```
 
-Railway juga bisa dipakai sebagai backend pengganti Render. Konfigurasi Netlify di repo ini sudah mem-proxy API ke:
+`vercel.json` mem-proxy endpoint API ke:
 
 ```text
 https://sahamath-production.up.railway.app
@@ -109,28 +93,16 @@ https://sahamath-production.up.railway.app
 
 Catatan penting:
 
-- Netlify tidak menjalankan `server.js` sebagai backend permanen.
-- Backend perlu host terpisah seperti Render.
-- Render Free bisa dipakai untuk personal project, tetapi bisa sleep saat idle dan cold start bisa lambat.
-- Jika repo public, jangan push `best_models.pkl`.
-- Jika ingin satu repo dan model tetap private, ubah repository menjadi private.
+- Vercel tidak menjalankan `server.js` sebagai backend permanen, jadi backend tetap di Railway.
+- `netlify.toml` masih ada sebagai cadangan; hapus kalau Netlify sudah tidak dipakai.
 
-Environment variable yang perlu diisi di Render untuk download model dari Supabase private bucket:
-
-```text
-SUPABASE_URL=isi_project_url
-SUPABASE_SERVICE_ROLE_KEY=isi_secret_key
-SUPABASE_BUCKET=models
-SUPABASE_MODEL_PATH=best_models.pkl
-```
-
-Untuk fitur **Analisis AI** (Gemini), isi juga:
+Untuk fitur **Analisis AI** (Gemini), isi environment variable:
 
 ```text
 GEMINI_API_KEY=isi_api_key_gemini
 ```
 
-Di lokal, environment variable bisa ditaruh di file `.env` di root (otomatis dibaca `server.js` saat start; file ini sudah di-`.gitignore`). Di production, set variabel di dashboard host (Railway/Render â†’ Variables) karena `.env` tidak ikut ter-deploy. Variabel OS asli selalu menang atas `.env`. Tanpa `GEMINI_API_KEY`, endpoint Analisis AI mengembalikan 503 dan fitur lain tetap jalan.
+Di lokal, environment variable bisa ditaruh di file `.env` di root (otomatis dibaca `server.js` saat start; file ini sudah di-`.gitignore`). Di production, set variabel di dashboard Railway (Variables) karena `.env` tidak ikut ter-deploy. Variabel OS asli selalu menang atas `.env`. Tanpa `GEMINI_API_KEY`, endpoint Analisis AI mengembalikan 503 dan fitur lain tetap jalan.
 
 ### Update Kalender IPO
 
@@ -142,31 +114,13 @@ npm run refresh:ipo
 
 Jalankan command itu dari laptop/lokal untuk mengambil e-ipo, lalu hasilnya disimpan ke `data/ipo-calendar.json`. Backend `/ipo-news` akan membaca file curated itu. Jika file kosong, endpoint memakai RSS sebagai alert berita IPO yang belum diverifikasi. Live scrape di backend hanya aktif jika `IPO_ALLOW_LIVE_SCRAPE=1`.
 
-Netlify build command:
+Build frontend (dipakai Vercel lewat `vercel.json`, output ke `dist`):
 
 ```bash
 npm run build:static
 ```
 
-Netlify publish directory:
-
-```text
-dist
-```
-
-Render build command:
-
-```bash
-npm install && pip install -r requirements.txt && npm run download:model
-```
-
-Render start command:
-
-```bash
-npm start
-```
-
-Untuk Railway, deploy paling stabil memakai `Dockerfile` yang sudah tersedia di repository. Kosongkan custom build command/start command jika Railway mendeteksi Dockerfile, lalu isi environment variable Supabase yang sama.
+Untuk Railway, deploy memakai `Dockerfile` yang sudah tersedia di repository. Kosongkan custom build command/start command jika Railway mendeteksi Dockerfile, lalu isi `GEMINI_API_KEY`.
 
 ## Dokumentasi Pengguna
 

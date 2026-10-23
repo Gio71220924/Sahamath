@@ -1,6 +1,6 @@
 # Auto-refresh the curated IPO calendar. The Azure runner gets past e-ipo's
 # Cloudflare (Railway's datacenter IP does not), so we scrape here and commit
-# data/ipo-calendar.json back; Railway/Netlify redeploy on the push.
+# data/ipo-calendar.json back; Railway/Vercel redeploy on the push.
 #
 # NOTE: If e-ipo.co.id blocks GitHub's datacenter IP (Cloudflare challenge),
 # refresh-ipo.js will log a warning and exit 0 — preserving the last good data.
@@ -22,11 +22,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      # Supabase free pauses a project after 7 days idle; this 2-day cron ping
-      # keeps it awake so the model download keeps working. (Restore it once in
-      # the dashboard first if it's already paused.)
-      - name: keep supabase awake
-        run: curl -s -m 15 -o /dev/null "https://ivrldaznlmiuqqfenvmm.supabase.co/rest/v1/" || true
       - run: pip install curl_cffi
       # Diagnose whether Cloudflare is blocking this runner's IP
       - name: check e-ipo reachability

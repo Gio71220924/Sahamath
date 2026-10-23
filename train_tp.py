@@ -12,7 +12,8 @@ Model (prob 3 kelas: TP / SL / timeout):
 Universe & waktu sama dengan train_regime.py: fit di proxy IDX100 (top-100 likuiditas per tanggal),
 uji juga di holdout saham lain yang tidak pernah dipakai fit. Purge N+1 hari.
 Metrik: Brier skill vs const (> 0 = lebih baik), kalibrasi P(TP) per desil.
-Belum export model. Run: python train_tp.py
+Belum export model. Butuh scikit-learn (training only, tidak masuk requirements.txt).
+Run: python train_tp.py
 """
 import numpy as np
 import pandas as pd
