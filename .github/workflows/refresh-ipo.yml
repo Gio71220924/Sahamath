@@ -7,7 +7,7 @@
 name: refresh-ipo
 on:
   schedule:
-    - cron: '0 1 */2 * *'   # ~every 2 days, 01:00 UTC (08:00 WIB)
+    - cron: '0 1 * * *'     # daily 01:00 UTC (08:00 WIB)
   workflow_dispatch:
 permissions:
   contents: write
