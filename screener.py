@@ -228,8 +228,9 @@ def triple_confirmation(df):
         buy_score += round(33 * (40 - rsi) / 40)
     if bullish_cross:
         buy_score += 33
+    # MA20 leg scales with distance: 17 at the line, full 34 at 5% away.
     if above_ma20:
-        buy_score += min(34, round(34 * (1 + (close - ma20) / ma20)))
+        buy_score += min(34, round(17 + 340 * (close - ma20) / ma20))
 
     sell_score = 0
     if rsi > 60:
@@ -237,7 +238,7 @@ def triple_confirmation(df):
     if bearish_cross:
         sell_score += 33
     if not above_ma20:
-        sell_score += min(34, round(34 * (1 + (ma20 - close) / ma20)))
+        sell_score += min(34, round(17 + 340 * (ma20 - close) / ma20))
 
     # Tiered: 3/3 aligned = STRONG, 2/3 = LEAN (partial setup worth watching),
     # else NEUTRAL. Buy/sell conditions are pairwise mutually exclusive, so
@@ -316,6 +317,10 @@ def build_swing_setup(df):
     else:
         label = 'Skip'
 
+    # After a selloff the 5d high can sit far above price (GEMS: 8425 vs 7300);
+    # breaking that isn't an actionable entry, so fall back to today's high.
+    if atr > 0 and recent_high - close > atr:
+        recent_high = float(last['High'])
     trigger = max(close, recent_high)
     bo_entry = round_to_tick(trigger, 'up')
 
@@ -330,8 +335,11 @@ def build_swing_setup(df):
 
     atr_stop = close - atr * 1.5 if atr > 0 else close * 0.94
     ma_stop = ma20 * 0.98 if ma20 else close * 0.94
-    raw_sl = max(recent_low, atr_stop, ma_stop)
     lowest_entry = min([p for p in [bo_entry, pb_entry] if p and p > 0], default=bo_entry)
+    # Below MA20, ma_stop sits above price; drop stops above entry instead of
+    # letting them trip the guard and push SL a full 1.5 ATR under pb_entry.
+    stops = [s for s in (recent_low, atr_stop, ma_stop) if s < lowest_entry]
+    raw_sl = max(stops) if stops else lowest_entry
     sl_guard_applied = False
     if raw_sl >= lowest_entry:
         guard_distance = max((atr * 1.5) if atr > 0 else 0, lowest_entry * 0.03)
