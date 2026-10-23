@@ -716,6 +716,126 @@ function PriceRangeCard({ r }) {
   );
 }
 
+/* ---------- Nota rencana trading (struk) + kepemilikan KSEI ---------- */
+// Warna uang rupiah: hijau Rp20rb naik, merah Rp100rb turun, biru Rp50rb kisaran/asing.
+// Kertas struk tetap terang di dark mode: itu kertas.
+const NOTA_INK = '#191b1a';
+const NOTA_UP = '#1f7a4d';
+const NOTA_DOWN = '#b8323c';
+const NOTA_INFO = '#2b57a6';
+const OWN_COLORS = { asing: '#2b57a6', ritel: '#a8742c', asuransi: '#3f7f78', reksadana: '#6b4f9a', korporasi: '#8c908b', lainnya: '#c4c8c2' };
+
+function NotaEdge({ bottom }) {
+  let d = bottom ? 'M0 0' : 'M0 10';
+  for (let i = 0; i < 34; i++) d += bottom ? ` L${i * 10 + 5} 10 L${i * 10 + 10} 0` : ` L${i * 10 + 5} 0 L${i * 10 + 10} 10`;
+  return (
+    <svg aria-hidden="true" viewBox="0 0 340 10" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: 10 }}>
+      <path d={d + ' Z'} fill="#fcfcfa" />
+    </svg>
+  );
+}
+
+function NotaRow({ k, v, c }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+      <span>{k}</span><span style={{ color: c || NOTA_INK }}>{v}</span>
+    </div>
+  );
+}
+
+function NotaCut() {
+  return <div aria-hidden="true" style={{ borderTop: '1.5px dashed #9ca19b', margin: '10px 0' }} />;
+}
+
+function NotaCard({ plan, range, ticker }) {
+  if (!plan) return null;
+  const rp = (v) => Math.round(v).toLocaleString('id-ID');
+  const pct = (v) => (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1).replace('.', ',') + '%';
+  const rr = (plan.target_profit - plan.entry) / (plan.entry - plan.stop_loss);
+  const b = plan.base_rates;
+  const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  return (
+    <section aria-label={`Nota rencana trading ${ticker}`} style={{ flex: '0 1 340px', minWidth: 280, filter: 'drop-shadow(0 10px 18px rgba(25, 27, 26, 0.18))' }}>
+      <NotaEdge />
+      <div className="mono tnum" style={{ background: '#fcfcfa', color: NOTA_INK, padding: '12px 22px 16px', fontSize: 12.5, lineHeight: 1.75 }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontFamily: 'Satoshi, system-ui, sans-serif', fontWeight: 800, fontSize: 20 }}>sahamath</div>
+          <div>Nota rencana trading</div>
+          <div style={{ color: '#5e625e' }}>{ticker}, {today}</div>
+        </div>
+        <NotaCut />
+        <NotaRow k="Entry" v={rp(plan.entry)} />
+        <NotaRow k="Target (2× ATR)" v={`${rp(plan.target_profit)} ${pct(plan.tp_percent)}`} c={NOTA_UP} />
+        <NotaRow k="Stop (1,5× ATR)" v={`${rp(plan.stop_loss)} ${pct(plan.sl_percent)}`} c={NOTA_DOWN} />
+        <NotaRow k="Untung : rugi" v={`${rr.toFixed(2).replace('.', ',')} : 1`} />
+        {range && (
+          <>
+            <NotaCut />
+            <div>Kisaran {range.horizon} hari, 8 dari 10 kali:</div>
+            <div style={{ textAlign: 'right', color: NOTA_INFO }}>{rp(range.p10)} sampai {rp(range.p90)}</div>
+          </>
+        )}
+        {b && (
+          <>
+            <NotaCut />
+            <div>Dari {Math.round(b.sample / 1000)} ribu plan serupa di IDX, {b.days} hari:</div>
+            <NotaRow k="Kena target duluan" v={`${b.tp_first}%`} c={NOTA_UP} />
+            <NotaRow k="Kena stop duluan" v={`${b.sl_first}%`} c={NOTA_DOWN} />
+            <NotaRow k="Belum kena keduanya" v={`${b.neither}%`} />
+          </>
+        )}
+        <NotaCut />
+        <p style={{ margin: 0 }}>Ini level risiko, bukan saran beli.</p>
+        <p style={{ margin: '12px 0 0', textAlign: 'center' }}>Saham yang sudah dibeli<br />tidak dapat dikembalikan.</p>
+      </div>
+      <NotaEdge bottom />
+    </section>
+  );
+}
+
+function OwnershipCard({ own, ticker }) {
+  if (!own) return null;
+  const date = (s) => new Date(s + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  const num = (v) => v.toFixed(2).replace('.', ',');
+  const delta = (d) => (d == null ? '–' : d === 0 ? 'tetap' : (d > 0 ? '+' : '−') + num(Math.abs(d)));
+  return (
+    <section aria-labelledby="own-h">
+      <h3 id="own-h" style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--fg)' }}>Siapa yang pegang {ticker}</h3>
+      <p style={{ margin: '2px 0 10px', fontSize: 13, color: 'var(--fg-muted)' }}>
+        Data KSEI per {date(own.date)}{own.prev_date ? `, dibanding ${date(own.prev_date)}` : ''}.
+      </p>
+      <div aria-hidden="true" style={{ display: 'flex', height: 18, gap: 2 }}>
+        {own.groups.map((g) => <span key={g.key} style={{ flex: Math.max(g.pct, 0), background: OWN_COLORS[g.key] }} />)}
+      </div>
+      <table style={{ width: '100%', marginTop: 10, borderCollapse: 'collapse', fontSize: 14 }}>
+        <caption style={{ position: 'absolute', left: -9999 }}>Porsi kepemilikan {ticker} dan perubahannya dalam poin persen</caption>
+        <thead>
+          <tr style={{ color: 'var(--fg-muted)', fontSize: 12, textAlign: 'left' }}>
+            <th scope="col" style={{ fontWeight: 600, padding: '4px 0' }}>Pemegang</th>
+            <th scope="col" style={{ fontWeight: 600, padding: '4px 0', textAlign: 'right' }}>Porsi</th>
+            <th scope="col" style={{ fontWeight: 600, padding: '4px 0', textAlign: 'right' }}>Perubahan</th>
+          </tr>
+        </thead>
+        <tbody>
+          {own.groups.map((g) => (
+            <tr key={g.key} style={{ borderTop: '1px solid var(--border)' }}>
+              <th scope="row" style={{ textAlign: 'left', fontWeight: 600, padding: '7px 0', color: 'var(--fg)' }}>
+                <span aria-hidden="true" style={{ display: 'inline-block', width: 10, height: 10, marginRight: 8, background: OWN_COLORS[g.key] }} />
+                {g.label}
+              </th>
+              <td className="mono tnum" style={{ textAlign: 'right', padding: '7px 0', color: 'var(--fg)' }}>{num(g.pct)}%</td>
+              <td className="mono tnum" style={{ textAlign: 'right', padding: '7px 0', color: g.delta > 0 ? 'var(--success)' : g.delta < 0 ? 'var(--danger)' : 'var(--fg-muted)' }}>{delta(g.delta)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--fg-muted)' }}>
+        Info, bukan sinyal: di 2024 dan 2025 porsi asing tidak membantu menebak arah harga bulan berikutnya.
+      </p>
+    </section>
+  );
+}
+
 function Analyzer({ initialTicker }) {
   const [ticker, setTicker] = useStateZ('BBRI');
   const [active, setActive] = useStateZ('BBRI');
@@ -1052,8 +1172,8 @@ function Analyzer({ initialTicker }) {
               </div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--fg)' }}>Trading Plan</div>
-                <div style={{ fontSize: 11, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-                  {mlData?.status === 'success' ? 'ATR · Live Data' : 'Jalankan npm start'}
+                <div style={{ fontSize: 12, color: 'var(--fg-muted)', fontWeight: 600 }}>
+                  {mlData?.status === 'success' ? 'Level risiko dari ATR dan data harga terbaru' : 'Jalankan npm start'}
                 </div>
               </div>
             </div>
@@ -1067,31 +1187,12 @@ function Analyzer({ initialTicker }) {
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
           ) : mlData?.status === 'success' ? (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 12, marginBottom: 10 }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--fg-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Entry</span>
-                <span className="mono tnum" style={{ fontSize: 18, fontWeight: 800, color: 'var(--fg)' }}>
-                  Rp {mlData.trading_plan.entry.toLocaleString('id-ID')}
-                </span>
-              </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-                  <div style={{ padding: 14, background: 'var(--primary-soft)', borderRadius: 12, border: '1px solid color-mix(in oklab, var(--primary) 25%, transparent)' }}>
-                    <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.08em', color: 'var(--primary)', marginBottom: 4 }}>TARGET PROFIT</div>
-                    <div className="mono tnum" style={{ fontSize: 18, fontWeight: 800, color: 'var(--primary)' }}>Rp {mlData.trading_plan.target_profit.toLocaleString('id-ID')}</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, marginTop: 2, color: 'var(--primary)' }}>+{mlData.trading_plan.tp_percent}%</div>
-                  </div>
-                  <div style={{ padding: 14, background: 'color-mix(in oklab, var(--danger) 10%, transparent)', borderRadius: 12, border: '1px solid color-mix(in oklab, var(--danger) 25%, transparent)' }}>
-                    <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.08em', color: 'var(--danger)', marginBottom: 4 }}>STOP LOSS</div>
-                    <div className="mono tnum" style={{ fontSize: 18, fontWeight: 800, color: 'var(--danger)' }}>Rp {mlData.trading_plan.stop_loss.toLocaleString('id-ID')}</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, marginTop: 2, color: 'var(--danger)' }}>{mlData.trading_plan.sl_percent}%</div>
-                  </div>
-                </div>
-              <div style={{ fontSize: 12, color: 'var(--fg-muted)', padding: '10px 12px', background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', lineHeight: 1.5 }}>
-                {mlData.trading_plan.note}
-              </div>
-              <PriceRangeCard r={mlData.price_range} />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28, alignItems: 'flex-start' }}>
+              <NotaCard plan={mlData.trading_plan} range={mlData.price_range} ticker={active} />
+              <div style={{ flex: '1 1 320px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 22 }}>
+              <OwnershipCard own={mlData.ownership} ticker={active} />
               {/* Indicators mini grid */}
-              <div className="analyzer-metric-grid" style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+              <div className="analyzer-metric-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                 {[
                   { label: 'Stoch %K',  value: mlData.indicators?.stoch != null ? mlData.indicators.stoch.toFixed(1) : '—' },
                   { label: 'BB',        value: mlData.indicators?.bb_pos ?? '—' },
@@ -1108,7 +1209,8 @@ function Analyzer({ initialTicker }) {
                   </div>
                 ))}
               </div>
-            </>
+              </div>
+            </div>
           ) : mlData?.status === 'error' ? (
             <div style={{ fontSize: 13, color: 'var(--danger)', padding: 16, background: 'color-mix(in oklab, var(--danger) 8%, transparent)', borderRadius: 'var(--radius-sm)' }}>
               {mlData.message}

@@ -128,6 +128,59 @@ function CoinLogo({ size = 36 }) {
   );
 }
 
+/* ---------- Isometric 3D icons (menu Kalkulator & Simulasi) ---------- */
+// Kotak & koin isometrik, 3 nada per material (atas terang, kiri sedang, kanan gelap).
+// Warna dari uang rupiah. viewBox 120x100, titik asal (60, 60).
+const ISO_ICONS = (() => {
+  const C = 0.866, S = 0.5, OX = 60, OY = 60;
+  const pt = (x, y, z) => `${(OX + (x - y) * C).toFixed(1)} ${(OY + (x + y) * S - z).toFixed(1)}`;
+  const poly = (pts) => 'M' + pts.join(' L') + ' Z';
+  const box = (x, y, z, w, d, h, t) => [
+    { d: poly([pt(x, y + d, z), pt(x + w, y + d, z), pt(x + w, y + d, z + h), pt(x, y + d, z + h)]), f: t[1] },
+    { d: poly([pt(x + w, y, z), pt(x + w, y + d, z), pt(x + w, y + d, z + h), pt(x + w, y, z + h)]), f: t[2] },
+    { d: poly([pt(x, y, z + h), pt(x + w, y, z + h), pt(x + w, y + d, z + h), pt(x, y + d, z + h)]), f: t[0] },
+  ];
+  const coin = (cx, cy, r, h, t) => {
+    const rx = 1.2247 * r, ry = 0.7071 * r;
+    const ell = (a, b) => `M${cx - a} ${cy} A${a} ${b} 0 1 0 ${cx + a} ${cy} A${a} ${b} 0 1 0 ${cx - a} ${cy} Z`;
+    return [
+      { d: `M${cx - rx} ${cy} L${cx - rx} ${cy + h} A${rx} ${ry} 0 0 0 ${cx + rx} ${cy + h} L${cx + rx} ${cy} Z`, f: t[2] },
+      { d: ell(rx, ry), f: t[0] },
+      { d: ell(rx * 0.72, ry * 0.72), f: t[1] },
+      { d: ell(rx * 0.62, ry * 0.62), f: t[0] },
+    ];
+  };
+  const gold = ['#e8c96b', '#c9a43f', '#97741f'];
+  const green = ['#6bb98f', '#2f8a5b', '#1d6542'];
+  const red = ['#e27c84', '#c0414b', '#8f2c36'];
+  const blue = ['#86a6da', '#3e66b0', '#294a86'];
+  const purple = ['#ad95d6', '#7a5cad', '#573f83'];
+  const paper = ['#e6e9e3', '#c4c9c2', '#9aa099']; // abu muda: lembar putih hilang di dropdown putih
+  const flat = (arr) => [].concat(...arr);
+  return {
+    average: flat([box(-30, -6, 0, 14, 14, 18, blue), box(-10, -6, 0, 14, 14, 34, blue), box(10, -6, 0, 14, 14, 26, blue)]),
+    araarb: flat([box(-20, -4, 0, 16, 16, 46, green), box(8, -4, 0, 16, 16, 14, red)]),
+    profit: flat([coin(60, 70, 24, 9, gold), coin(60, 56, 24, 9, gold), coin(60, 42, 24, 9, gold)]),
+    amunisi: flat([box(-18, -14, 0, 36, 28, 9, paper), box(-18, -14, 11, 36, 28, 9, blue), box(-18, -14, 22, 36, 28, 9, green)]),
+    dividen: flat([box(-24, -24, 0, 48, 48, 7, purple), coin(60, 45, 18, 8, gold)]),
+    papertrade: flat([box(-22, -16, 0, 40, 30, 3, paper), box(-18, -20, 5, 40, 30, 3, paper), box(-14, -24, 10, 40, 30, 3, paper), coin(72, 40, 9, 5, gold)]),
+    arena: flat([
+      box(-30, -10, 0, 12, 12, 30, red), box(-30, 4, 0, 12, 12, 20, red), box(-30, 18, 0, 12, 12, 10, red),
+      box(-12, -28, 0, 12, 12, 10, green), box(2, -28, 0, 12, 12, 20, green), box(16, -28, 0, 12, 12, 30, green),
+    ]),
+  };
+})();
+
+function IsoIcon({ name, size = 36 }) {
+  const shapes = ISO_ICONS[name];
+  if (!shapes) return null;
+  return (
+    <svg aria-hidden="true" viewBox="0 0 120 100" width={size} height={Math.round(size * 100 / 120)} style={{ flexShrink: 0 }}>
+      {shapes.map((s, i) => <path key={i} d={s.d} fill={s.f} />)}
+    </svg>
+  );
+}
+
 /* ---------- Header (sticky + mobile menu) ---------- */
 // Grouped navigation: 10 flat links collapsed into 3 dropdown groups + 1
 // standalone link, so the top bar reads as 4 items instead of ten.
@@ -244,6 +297,7 @@ function Header({ route, onNavigate, theme, onThemeChange }) {
                         onClick={() => { onNavigate(item.id); setOpenGroup(null); }}
                         className={`nav-dropdown-item${route === item.id ? ' nav-dropdown-item--active' : ''}`}
                       >
+                        <IsoIcon name={item.id} size={34} />
                         {item.label}
                       </button>
                     ))}
@@ -340,9 +394,11 @@ function Header({ route, onNavigate, theme, onThemeChange }) {
                     type="button"
                     onClick={() => { onNavigate(l.id); setMenuOpen(false); }}
                     style={{
-                      display: 'block',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
                       width: '100%',
-                      padding: '14px 16px',
+                      padding: '10px 16px',
                       textAlign: 'left',
                       fontSize: 16,
                       fontWeight: 600,
@@ -351,6 +407,7 @@ function Header({ route, onNavigate, theme, onThemeChange }) {
                       background: route === l.id ? 'var(--primary-soft)' : 'transparent',
                     }}
                   >
+                    <IsoIcon name={l.id} size={34} />
                     {l.label}
                   </button>
                 ))}
@@ -439,7 +496,10 @@ function Header({ route, onNavigate, theme, onThemeChange }) {
           to { opacity: 1; transform: translateY(0); }
         }
         .nav-dropdown-item {
-          padding: 10px 12px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 6px 12px 6px 6px;
           text-align: left;
           font-size: 14px;
           font-weight: 600;

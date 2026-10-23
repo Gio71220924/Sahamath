@@ -1,8 +1,13 @@
 import sys
 import json
+import os
+import re
+import time
 import warnings
+import zipfile
 import pandas as pd
 import numpy as np
+import requests
 import yfinance as yf
 
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -232,9 +237,87 @@ def build_trading_plan(last_price, atr_val):
         "tp_percent": round(atr_val * 2 / last_price * 100, 2),
         "sl_percent": round(-atr_val * 1.5 / last_price * 100, 2),
         # Base rate dari train_tp.py (±294rb plan IDX 2022-2026, 10 hari bursa, walk-forward)
+        "base_rates": {"tp_first": 28, "sl_first": 37, "neither": 34, "sample": 294000, "days": 10},
         "note": ("TP 2× ATR, SL 1.5× ATR (RR 1.33). Historis IDX, 10 hari: kena TP duluan ~28%, "
                  "SL duluan ~37%, belum kena ~34%. Level risiko, bukan sinyal beli."),
     }
+
+
+# ─── Kepemilikan KSEI ─────────────────────────────────────────────────────────
+
+KSEI = "https://web.ksei.co.id"
+KSEI_CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".cache", "ksei")
+KSEI_UA = {"User-Agent": "Mozilla/5.0"}
+# Balancepos: Date|Code|Type|Sec. Num|Price|Local IS..OT (5-13)|Local Total (14)|Foreign IS..OT (15-23)|Foreign Total (24)
+OWN_GROUPS = [("asing", "Investor asing", [24]), ("ritel", "Ritel lokal", [9]), ("asuransi", "Asuransi", [5]),
+              ("reksadana", "Reksa dana", [10]), ("korporasi", "Korporasi", [6])]
+
+
+def ksei_files(n=2):
+    """Path n file KSEI bulanan terbaru (cache di disk). Daftar arsip di-refresh tiap 24 jam."""
+    os.makedirs(KSEI_CACHE, exist_ok=True)
+    index = os.path.join(KSEI_CACHE, "index.txt")
+    if os.path.exists(index) and time.time() - os.path.getmtime(index) < 86400:
+        with open(index) as f:
+            names = f.read().split()
+    else:
+        page = requests.get(f"{KSEI}/archive_download/holding_composition", headers=KSEI_UA, timeout=10).text
+        names = sorted(set(re.findall(r"BalanceposEfek\d{8}\.zip", page)))
+        with open(index, "w") as f:
+            f.write("\n".join(names))
+    paths = []
+    for name in names[-n:]:
+        path = os.path.join(KSEI_CACHE, name)
+        if not os.path.exists(path):
+            r = requests.get(f"{KSEI}/Download/{name}", headers=KSEI_UA, timeout=20)
+            if not (r.ok and r.content[:2] == b"PK"):
+                continue
+            with open(path, "wb") as f:
+                f.write(r.content)
+        paths.append(path)
+    return paths
+
+
+def ownership_shares(lines, ticker):
+    """Porsi (%) per kelompok pemegang dari baris Balancepos; None kalau ticker tidak ada."""
+    for line in lines:
+        p = line.split("|")
+        if len(p) >= 25 and p[1].strip() == ticker and p[2].strip() == "EQUITY":
+            held = float(p[14]) + float(p[24])
+            if held <= 0:
+                return None
+            shares = {key: sum(float(p[i]) for i in cols) / held * 100 for key, _, cols in OWN_GROUPS}
+            shares["lainnya"] = 100 - sum(shares.values())
+            return shares
+    return None
+
+
+def fetch_ownership(ticker):
+    """Komposisi kepemilikan KSEI bulan terakhir + perubahan dari bulan sebelumnya. None kalau gagal."""
+    ticker = ticker.upper().replace(".JK", "")
+    try:
+        months = []
+        for path in ksei_files(2):
+            with zipfile.ZipFile(path) as z:
+                lines = z.read(z.namelist()[0]).decode("utf-8", "replace").splitlines()
+            shares = ownership_shares(lines, ticker)
+            if shares:
+                stamp = os.path.basename(path)[14:22]  # BalanceposEfekYYYYMMDD.zip
+                months.append((f"{stamp[:4]}-{stamp[4:6]}-{stamp[6:]}", shares))
+        if not months:
+            return None
+        date, cur = months[-1]
+        prev = months[-2] if len(months) > 1 else None
+        labels = {key: label for key, label, _ in OWN_GROUPS}
+        labels["lainnya"] = "Lainnya"
+        return {
+            "date": date,
+            "prev_date": prev[0] if prev else None,
+            "groups": [{"key": k, "label": labels[k], "pct": round(v, 2),
+                        "delta": round(v - prev[1][k], 2) if prev else None} for k, v in cur.items()],
+        }
+    except Exception:
+        return None
 
 
 # ─── Main Prediction ──────────────────────────────────────────────────────────
@@ -312,6 +395,7 @@ def get_prediction(ticker):
             "market":      market_context,
             "trading_plan": plan,
             "price_range": price_range(ohlcv, 5),
+            "ownership":   fetch_ownership(ticker),
             "indicators":  indicators,
             "chart_history": chart_data,
         }
