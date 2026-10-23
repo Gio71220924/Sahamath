@@ -7,8 +7,6 @@
 
 const { useState: useStateZ, useMemo: useMemoZ, useRef: useRefZ, useEffect: useEffectZ } = React;
 
-const PRED_LABEL = { UP: 'BUY', DOWN: 'SELL', NEUTRAL: 'HOLD' };
-const PRED_COLOR = { UP: 'var(--primary)', DOWN: 'var(--danger)', NEUTRAL: 'var(--warning)' };
 
 const POPULAR_TICKERS = ['BBRI', 'BBCA', 'TLKM', 'ASII', 'ANTM', 'BUMI', 'BMRI', 'GOTO', 'ADRO'];
 const BROKER_CODES = ['MG', 'CC', 'YP', 'RG', 'BR', 'AT', 'GR', 'CS', 'KZ', 'NI', 'DH', 'YU'];
@@ -316,7 +314,7 @@ function BrokerTable({ title, subtitle, list, color, icon }) {
 }
 
 /* ---------- ML Plan Chart — real candles + entry/TP/SL lines ---------- */
-function MLPlanChart({ candles, plan, prediction }) {
+function MLPlanChart({ candles, plan }) {
   const W = 1000, H = 360, PAD = { t: 16, r: 72, b: 32, l: 12 };
   const n = candles.length;
   if (!n) return null;
@@ -325,12 +323,8 @@ function MLPlanChart({ candles, plan, prediction }) {
   const svgRef = useRefZ(null);
 
   const prices = candles.flatMap((c) => [c.high, c.low]);
-  const rawMin = prediction === 'NEUTRAL'
-    ? Math.min(...prices)
-    : Math.min(...prices, plan.stop_loss, plan.target_profit);
-  const rawMax = prediction === 'NEUTRAL'
-    ? Math.max(...prices)
-    : Math.max(...prices, plan.stop_loss, plan.target_profit);
+  const rawMin = Math.min(...prices, plan.stop_loss, plan.target_profit);
+  const rawMax = Math.max(...prices, plan.stop_loss, plan.target_profit);
   const pad    = (rawMax - rawMin) * 0.06;
   const lo = rawMin - pad, hi = rawMax + pad;
   const range = hi - lo || 1;
@@ -410,29 +404,10 @@ function MLPlanChart({ candles, plan, prediction }) {
         );
       })}
 
-      {/* signal markers */}
-      {candles.map((c, i) => {
-        if (c.signal === 0) return null;
-        const cx  = fx(i);
-        const buy = c.signal === 1;
-        const y   = buy ? fy(c.low) + 8 : fy(c.high) - 8;
-        return (
-          <text key={'sig'+i} x={cx} y={y} textAnchor="middle"
-            fontSize={10} fill={buy ? 'var(--success)' : 'var(--danger)'}
-            fontWeight={900} opacity={0.85}>
-            {buy ? '▲' : '▼'}
-          </text>
-        );
-      })}
-
       {/* TP / Entry / SL lines */}
-      {prediction !== 'NEUTRAL' && (prediction === 'DOWN'
-        ? hline(plan.target_profit, 'var(--danger)',  '6 3', 'PROJ')
-        : hline(plan.target_profit, 'var(--success)', '6 3', 'TP'))}
+      {hline(plan.target_profit, 'var(--success)', '6 3', 'TP')}
       {hline(plan.entry, '#4d8fff', '0', 'ENTRY')}
-      {prediction !== 'NEUTRAL' && (prediction === 'DOWN'
-        ? hline(plan.stop_loss, 'var(--warning)', '6 3', 'STOP')
-        : hline(plan.stop_loss, 'var(--danger)',  '6 3', 'SL'))}
+      {hline(plan.stop_loss, 'var(--danger)', '6 3', 'SL')}
 
       {/* date labels */}
       {dateIdxs.map((i) => (
@@ -513,20 +488,11 @@ function AnalyzerChart({ ticker, mlData, mlLoading }) {
         {/* legend */}
         <div style={{ display: 'flex', gap: 16, padding: '8px 16px', borderBottom: '1px solid var(--border)', flexWrap: 'wrap', alignItems: 'center' }}>
           <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--fg)' }}>{ticker} · 60 Hari</span>
-          {(mlData.prediction === 'NEUTRAL'
-            ? [{ label: 'ENTRY', val: plan.entry, color: '#4d8fff', pct: null }]
-            : mlData.prediction === 'DOWN'
-            ? [
-                { label: 'ENTRY',    val: plan.entry,         color: '#4d8fff',        pct: null },
-                { label: 'TARGET TURUN', val: plan.target_profit, color: 'var(--danger)',  pct: plan.tp_percent + '%' },
-                { label: 'LEVEL STOP',  val: plan.stop_loss,     color: 'var(--warning)', pct: '+' + plan.sl_percent + '%' },
-              ]
-            : [
-                { label: 'ENTRY', val: plan.entry,         color: '#4d8fff',        pct: null },
-                { label: 'TP',    val: plan.target_profit, color: 'var(--success)', pct: '+' + plan.tp_percent + '%' },
-                { label: 'SL',    val: plan.stop_loss,     color: 'var(--danger)',  pct: plan.sl_percent + '%' },
-              ]
-          ).map(({ label, val, color, pct }) => (
+          {[
+            { label: 'ENTRY', val: plan.entry,         color: '#4d8fff',        pct: null },
+            { label: 'TP',    val: plan.target_profit, color: 'var(--success)', pct: '+' + plan.tp_percent + '%' },
+            { label: 'SL',    val: plan.stop_loss,     color: 'var(--danger)',  pct: plan.sl_percent + '%' },
+          ].map(({ label, val, color, pct }) => (
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <span style={{ width: 20, height: 2, background: color, display: 'inline-block', borderRadius: 1 }} />
               <span style={{ fontSize: 11, fontWeight: 700, color }}>{label}</span>
@@ -536,13 +502,9 @@ function AnalyzerChart({ ticker, mlData, mlLoading }) {
               {pct && <span style={{ fontSize: 10, color, fontWeight: 800 }}>{pct}</span>}
             </div>
           ))}
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, fontSize: 10, color: 'var(--fg-muted)', fontWeight: 700 }}>
-            <span style={{ color: 'var(--success)' }}>▲ BUY</span>
-            <span style={{ color: 'var(--danger)' }}>▼ SELL</span>
-          </div>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <MLPlanChart candles={mlData.chart_history} plan={plan} prediction={mlData.prediction} />
+          <MLPlanChart candles={mlData.chart_history} plan={plan} />
         </div>
       </div>
     );
@@ -640,10 +602,6 @@ function StrategyPicker({ strategies, mode, onStrategiesChange, onModeChange }) 
 
 /* ---------- Screener Panel ---------- */
 function ScreenerPanel({ data, loading, error, lastScan, onRefresh, onSelect }) {
-  const PRED_COLOR_S = { UP: 'var(--primary)', DOWN: 'var(--danger)', NEUTRAL: 'var(--warning)' };
-  const PRED_LABEL_S = { UP: '▲ BUY', DOWN: '▼ SELL', NEUTRAL: '● NEUTRAL' };
-  const ROW_BG = { UP: 'rgba(0,200,100,0.06)', DOWN: 'rgba(220,50,50,0.06)', NEUTRAL: 'transparent' };
-
   const fmt = (v) => v != null ? (typeof v === 'number' ? v.toLocaleString('id-ID') : v) : '—';
   const fmtPct = (v) => v != null ? v.toFixed(1) + '%' : '—';
   const fmtCMF = (v) => v != null ? (v >= 0 ? '+' : '') + v.toFixed(3) : '—';
@@ -736,7 +694,6 @@ function ScreenerPanel({ data, loading, error, lastScan, onRefresh, onSelect }) 
         <div className="screener-mobile-list">
           {data.map((row) => {
             const isError = row.status === 'error';
-            const signalColor = isError ? 'var(--danger)' : PRED_COLOR_S[row.prediction];
             const swingColor = isError
               ? 'var(--fg-faint)'
               : (row.swing?.score >= 9 ? 'var(--primary)' : row.swing?.score >= 6 ? 'var(--success)' : row.swing?.score >= 4 ? 'var(--warning)' : 'var(--fg-muted)');
@@ -755,8 +712,8 @@ function ScreenerPanel({ data, loading, error, lastScan, onRefresh, onSelect }) 
                       {isError ? row.message : `${row.swing?.score ?? 0} - ${row.swing?.setup ?? '-'}`}
                     </div>
                   </div>
-                  <div className="screener-mobile-signal" style={{ color: signalColor }}>
-                    {isError ? 'ERROR' : PRED_LABEL_S[row.prediction]}
+                  <div className="screener-mobile-signal" style={{ color: isError ? 'var(--danger)' : 'var(--fg)' }}>
+                    {isError ? 'ERROR' : fmtPrice(row.price)}
                   </div>
                 </div>
 
@@ -818,7 +775,7 @@ function ScreenerPanel({ data, loading, error, lastScan, onRefresh, onSelect }) 
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--border)' }}>
-                {['Ticker', 'Strategi', 'Skor', 'Swing', 'VSA', 'Signal', 'BO Entry', 'PB Entry', 'TP', 'SL', 'Risk', 'Vol', 'RS', 'Harga'].map((h) => (
+                {['Ticker', 'Strategi', 'Skor', 'Swing', 'VSA', 'BO Entry', 'PB Entry', 'TP', 'SL', 'Risk', 'Vol', 'RS', 'Harga'].map((h) => (
                   <th key={h} style={{
                     padding: '8px 12px', textAlign: h === 'Ticker' ? 'left' : 'right',
                     fontSize: 11, fontWeight: 800, letterSpacing: '0.06em',
@@ -832,7 +789,7 @@ function ScreenerPanel({ data, loading, error, lastScan, onRefresh, onSelect }) 
             <tbody>
               {data.map((row) => {
                 const isError = row.status === 'error';
-                const bg = isError ? 'transparent' : ROW_BG[row.prediction] || 'transparent';
+                const bg = 'transparent';
                 return (
                   <tr
                     key={row.ticker}
@@ -863,13 +820,10 @@ function ScreenerPanel({ data, loading, error, lastScan, onRefresh, onSelect }) 
                       )}
                     </td>
                     <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 900, color: isError ? 'var(--fg-faint)' : (row.swing?.score >= 9 ? 'var(--primary)' : row.swing?.score >= 6 ? 'var(--success)' : row.swing?.score >= 4 ? 'var(--warning)' : 'var(--fg-muted)') }}>
-                      {isError ? '—' : `${row.swing?.score ?? 0} · ${row.swing?.setup ?? '-'}`}
+                      {isError ? <span title={row.message} style={{ fontSize: 11, background: 'var(--danger)', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>Error</span> : `${row.swing?.score ?? 0} · ${row.swing?.setup ?? '-'}`}
                     </td>
                     <td style={{ padding: '10px 12px', textAlign: 'right', color: row.swing?.vsa === 'Climax Risk' || row.swing?.vsa === 'Weak Rally' ? 'var(--danger)' : row.swing?.vsa === 'Neutral' ? 'var(--fg-muted)' : 'var(--primary)', fontWeight: 700 }}>
                       {isError ? '—' : (row.swing?.vsa || '—')}
-                    </td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: isError ? 'var(--fg-faint)' : PRED_COLOR_S[row.prediction] }}>
-                      {isError ? <span style={{ fontSize: 11, background: 'var(--danger)', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>Error</span> : PRED_LABEL_S[row.prediction]}
                     </td>
                     <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', color: 'var(--fg)' }}>{isError ? '—' : fmtPrice(row.swing?.bo_entry ?? row.swing?.entry)}</td>
                     <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', color: 'var(--warning)' }}>{isError ? '—' : fmtPrice(row.swing?.pb_entry)}</td>
@@ -888,7 +842,7 @@ function ScreenerPanel({ data, loading, error, lastScan, onRefresh, onSelect }) 
       )}
 
       <div style={{ marginTop: 16, fontSize: 11, color: 'var(--fg-faint)', lineHeight: 1.5 }}>
-        Klik baris untuk buka analisis lengkap. Data berdasarkan model SVM — bukan rekomendasi investasi. DYOR.
+        Klik baris untuk buka analisis lengkap. Skor swing dari indikator teknikal — bukan rekomendasi investasi. DYOR.
       </div>
     </div>
   );
@@ -1416,10 +1370,10 @@ function Analyzer({ initialTicker }) {
         <FlowCard icon="star"    label="Net Retail"  value={bandData ? bandData.netRetail  : (mlData?.bandarmology?.net_retail  ?? data.netRetail)}  color="#f59e0b" live={!!(bandData || mlData?.bandarmology)} />
       </div>
 
-      {/* ML Trading Plan + Performance */}
+      {/* Trading Plan (ATR) */}
       <div
         className="calc-grid analyzer-ml-grid"
-        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}
+        style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16, marginBottom: 16 }}
       >
         {/* Card 1: Trading Plan */}
         <div className="card analyzer-ml-card" style={{ padding: 24 }}>
@@ -1429,28 +1383,18 @@ function Analyzer({ initialTicker }) {
                 <Icon name="rocket" size={18} />
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--fg)' }}>ML Trading Plan</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--fg)' }}>Trading Plan</div>
                 <div style={{ fontSize: 11, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-                  {mlData?.status === 'success' ? 'SVM · Live Data' : 'Jalankan npm start'}
+                  {mlData?.status === 'success' ? 'ATR · Live Data' : 'Jalankan npm start'}
                 </div>
               </div>
             </div>
-            {mlData?.status === 'success' && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                <div style={{ padding: '6px 12px', borderRadius: 999, background: 'color-mix(in oklab, ' + PRED_COLOR[mlData.prediction] + ' 14%, transparent)', color: PRED_COLOR[mlData.prediction], fontSize: 11, fontWeight: 900, letterSpacing: '0.06em' }}>
-                  {PRED_LABEL[mlData.prediction] || mlData.prediction}
-                </div>
-                <div style={{ padding: '3px 8px', borderRadius: 999, background: mlData.model_type === 'per_emiten' ? 'color-mix(in oklab, var(--success) 12%, transparent)' : 'color-mix(in oklab, var(--warning) 12%, transparent)', color: mlData.model_type === 'per_emiten' ? 'var(--success)' : 'var(--warning)', fontSize: 9, fontWeight: 900, letterSpacing: '0.08em' }}>
-                  {mlData.model_type === 'per_emiten' ? 'PER EMITEN' : 'UNIVERSAL'}
-                </div>
-              </div>
-            )}
           </div>
 
           {mlLoading ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '24px 0', color: 'var(--fg-muted)' }}>
               <div style={{ width: 32, height: 32, border: '3px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-              <div style={{ fontSize: 13, fontWeight: 600 }}>Menghitung prediksi ML...</div>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>Menghitung indikator...</div>
               <div style={{ fontSize: 11, color: 'var(--fg-faint)' }}>Download data + hitung indikator (~5–10 detik)</div>
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
@@ -1462,25 +1406,6 @@ function Analyzer({ initialTicker }) {
                   Rp {mlData.trading_plan.entry.toLocaleString('id-ID')}
                 </span>
               </div>
-              {mlData.prediction === 'NEUTRAL' ? (
-                <div style={{ padding: '16px 14px', background: 'color-mix(in oklab, var(--warning) 10%, transparent)', borderRadius: 12, border: '1px solid color-mix(in oklab, var(--warning) 25%, transparent)', marginBottom: 10, textAlign: 'center' }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--warning)', marginBottom: 4 }}>TIDAK ADA TRADING PLAN</div>
-                  <div style={{ fontSize: 11, color: 'var(--fg-muted)' }}>Model mendeteksi kondisi sideways — tidak disarankan entry</div>
-                </div>
-              ) : mlData.prediction === 'DOWN' ? (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
-                  <div style={{ padding: 14, background: 'color-mix(in oklab, var(--danger) 10%, transparent)', borderRadius: 12, border: '1px solid color-mix(in oklab, var(--danger) 25%, transparent)' }}>
-                    <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.08em', color: 'var(--danger)', marginBottom: 4 }}>LEVEL TARGET TURUN</div>
-                    <div className="mono tnum" style={{ fontSize: 18, fontWeight: 800, color: 'var(--danger)' }}>Rp {mlData.trading_plan.target_profit.toLocaleString('id-ID')}</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, marginTop: 2, color: 'var(--danger)' }}>{mlData.trading_plan.tp_percent}%</div>
-                  </div>
-                  <div style={{ padding: 14, background: 'color-mix(in oklab, var(--warning) 10%, transparent)', borderRadius: 12, border: '1px solid color-mix(in oklab, var(--warning) 25%, transparent)' }}>
-                    <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.08em', color: 'var(--warning)', marginBottom: 4 }}>LEVEL STOP</div>
-                    <div className="mono tnum" style={{ fontSize: 18, fontWeight: 800, color: 'var(--warning)' }}>Rp {mlData.trading_plan.stop_loss.toLocaleString('id-ID')}</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, marginTop: 2, color: 'var(--warning)' }}>+{mlData.trading_plan.sl_percent}%</div>
-                  </div>
-                </div>
-              ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                   <div style={{ padding: 14, background: 'var(--primary-soft)', borderRadius: 12, border: '1px solid color-mix(in oklab, var(--primary) 25%, transparent)' }}>
                     <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.08em', color: 'var(--primary)', marginBottom: 4 }}>TARGET PROFIT</div>
@@ -1493,7 +1418,6 @@ function Analyzer({ initialTicker }) {
                     <div style={{ fontSize: 11, fontWeight: 700, marginTop: 2, color: 'var(--danger)' }}>{mlData.trading_plan.sl_percent}%</div>
                   </div>
                 </div>
-              )}
               <div style={{ fontSize: 12, color: 'var(--fg-muted)', padding: '10px 12px', background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', lineHeight: 1.5 }}>
                 {mlData.trading_plan.note}
               </div>
@@ -1507,7 +1431,7 @@ function Analyzer({ initialTicker }) {
                   { label: 'CMF',       value: mlData.indicators?.cmf != null ? mlData.indicators.cmf.toFixed(3) : '—' },
                   { label: 'MFI',       value: mlData.indicators?.mfi != null ? mlData.indicators.mfi.toFixed(1) : '—' },
                   { label: 'Vol Ratio', value: mlData.indicators?.vol_ratio != null ? mlData.indicators.vol_ratio.toFixed(2) + 'x' : '—' },
-                  { label: 'Quality',   value: mlData.signal_quality ?? '—' },
+                  { label: 'IHSG',      value: mlData.market?.regime ?? '—' },
                   { label: 'RS IHSG',   value: mlData.market?.relative_strength_20d != null ? (mlData.market.relative_strength_20d * 100).toFixed(1) + '%' : '—' },
                 ].map((m) => (
                   <div key={m.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)' }}>
@@ -1525,95 +1449,14 @@ function Analyzer({ initialTicker }) {
           ) : (
             <div style={{ fontSize: 13, color: 'var(--fg-muted)', padding: 16, background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', lineHeight: 1.6 }}>
               {mlData === null ? (
-                loading ? 'Memuat prediksi ML...' : 'Klik Analisa untuk memuat prediksi real dari model SVM.'
+                loading ? 'Memuat data...' : 'Klik Analisa untuk memuat trading plan dari data live.'
               ) : (
-                <>Fitur ML memerlukan server lokal.<br /><strong style={{ color: 'var(--fg)' }}>npm start</strong> untuk mengaktifkan.</>
+                <>Fitur ini memerlukan server lokal.<br /><strong style={{ color: 'var(--fg)' }}>npm start</strong> untuk mengaktifkan.</>
               )}
             </div>
           )}
         </div>
 
-        {/* Card 2: Win Rate + Recent Trades */}
-        <div className="card analyzer-ml-card" style={{ padding: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--primary-soft)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Icon name="check" size={18} />
-            </div>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 800 }}>Model Performance</div>
-              <div style={{ fontSize: 11, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
-                {mlData?.status === 'success' ? `${mlData.recent_trades?.length ?? 0} sinyal terakhir · Live` : 'Sinyal historis'}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 14 }}>
-            <span className="mono tnum" style={{ fontSize: 48, fontWeight: 900, letterSpacing: '-0.03em', color: mlData?.status === 'success' ? (mlData.win_rate >= 50 ? 'var(--success)' : 'var(--danger)') : 'var(--fg)' }}>
-              <AnimatedNumber value={mlData?.status === 'success' ? mlData.win_rate : data.plan.winRate} format={(n) => Math.round(n) + '%'} />
-            </span>
-            <span style={{ fontSize: 13, color: 'var(--fg-muted)', fontWeight: 700 }}>Direction WR</span>
-          </div>
-
-          {mlData?.status === 'success' && mlData.backtest && (
-            <div className="analyzer-metric-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
-              {[
-                { label: 'Buy Trades', value: mlData.backtest.actionable_trades ?? 0 },
-                { label: 'BUY Avg', value: (mlData.backtest.avg_return_pct ?? 0).toFixed(2) + '%' },
-                { label: 'BUY PF', value: mlData.backtest.profit_factor ?? 0 },
-                { label: 'Max DD', value: (mlData.backtest.max_drawdown_pct ?? 0).toFixed(2) + '%' },
-              ].map((m) => (
-                <div key={m.label} style={{ padding: '8px 10px', background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                  <span style={{ fontSize: 10, color: 'var(--fg-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{m.label}</span>
-                  <span className="mono" style={{ fontSize: 11, fontWeight: 800, color: 'var(--fg)' }}>{m.value}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Recent Trades table */}
-          {mlData?.status === 'success' && mlData.recent_trades?.length > 0 ? (
-            <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
-              <div className="analyzer-trade-header" style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 2fr 1.5fr 1.5fr', padding: '6px 10px', background: 'var(--surface-2)', borderBottom: '1px solid var(--border)' }}>
-                {['Tgl', 'Sinyal', 'Harga', 'Hasil', 'Move'].map((h) => (
-                  <span key={h} style={{ fontSize: 9, fontWeight: 800, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</span>
-                ))}
-              </div>
-              {mlData.recent_trades.map((t, i) => {
-                const isWin = t.result === 'WIN';
-                const isBuy = t.signal === 'BUY';
-                return (
-                  <div key={i} className="analyzer-trade-row" style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 2fr 1.5fr 1.5fr', padding: '8px 10px', borderBottom: i < mlData.recent_trades.length - 1 ? '1px solid var(--border)' : 'none', background: isWin ? 'color-mix(in oklab, var(--success) 5%, transparent)' : 'color-mix(in oklab, var(--danger) 5%, transparent)', alignItems: 'center' }}>
-                    <span style={{ fontSize: 11, color: 'var(--fg-muted)', fontWeight: 600 }}>{t.date}</span>
-                    <span style={{ fontSize: 10, fontWeight: 900, color: isBuy ? 'var(--success)' : 'var(--danger)', letterSpacing: '0.04em' }}>{t.signal}</span>
-                    <span className="mono tnum" style={{ fontSize: 11, fontWeight: 700, color: 'var(--fg)' }}>Rp {Math.round(t.price).toLocaleString('id-ID')}</span>
-                    <span style={{ fontSize: 10, fontWeight: 900, color: isWin ? 'var(--success)' : 'var(--danger)' }}>{t.result}</span>
-                    <span className="mono tnum" style={{ fontSize: 11, fontWeight: 700, color: t.profit_pct >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                      {t.profit_pct >= 0 ? '+' : ''}{t.profit_pct}%
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          ) : mlData?.status === 'success' ? (
-            <div style={{ fontSize: 12, color: 'var(--fg-muted)', padding: 12, background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)' }}>
-              Belum ada sinyal dalam 60 hari terakhir.
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {[
-                { label: 'Stoch %K',    value: (40 + (data.plan.strength % 50)).toFixed(1) },
-                { label: 'BB Position', value: data.plan.isBullish ? 'Upper' : 'Mid' },
-                { label: 'ADX',         value: (20 + (data.plan.strength % 30)).toFixed(1) },
-                { label: 'OBV Trend',   value: data.netForeign >= 0 ? 'Rising' : 'Falling' },
-              ].map((m, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)' }}>
-                  <span style={{ fontSize: 12, color: 'var(--fg-muted)', fontWeight: 700 }}>{m.label}</span>
-                  <span className="mono" style={{ fontSize: 13, fontWeight: 700, color: 'var(--fg)' }}>{m.value}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
 
       {/* broker tables — date range picker */}
@@ -1696,7 +1539,7 @@ function Analyzer({ initialTicker }) {
           <Icon name="info" size={18} />
         </span>
         <div style={{ fontSize: 13, color: 'var(--fg-muted)', lineHeight: 1.55 }}>
-          <strong style={{ color: 'var(--fg)' }}>Disclaimer:</strong> Data bandarmology dari api-saham. ML Trading Plan menggunakan model SVM yang dilatih dari data historis IDX — bukan rekomendasi beli/jual. DYOR.
+          <strong style={{ color: 'var(--fg)' }}>Disclaimer:</strong> Data bandarmology dari api-saham. Trading Plan berupa level risiko dari ATR dan volatilitas — bukan prediksi arah atau rekomendasi beli/jual. DYOR.
         </div>
       </div>
       </>)}

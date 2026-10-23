@@ -1,7 +1,6 @@
 import sys
 import json
 import warnings
-import joblib
 import pandas as pd
 import numpy as np
 import requests
@@ -17,39 +16,6 @@ from ta.volume import OnBalanceVolumeIndicator, ChaikinMoneyFlowIndicator, MFIIn
 from ta.trend import ADXIndicator
 
 FEE_BUFFER_PCT = 0.45
-MIN_EDGE_ATR_MULT = 0.5
-
-# ─── Model Loader ─────────────────────────────────────────────────────────────
-
-def load_models():
-    """Load best_models.pkl (multi-model). Fallback ke trading_model.pkl lama."""
-    try:
-        bundle = joblib.load('best_models.pkl')
-        if isinstance(bundle, dict) and 'universal' in bundle:
-            return bundle, 'multi'
-        raise ValueError("Format best_models.pkl tidak valid")
-    except Exception:
-        pass
-
-    try:
-        old = joblib.load('trading_model.pkl')
-        return {'universal': {'model': old['model'], 'features': old['features'], 'horizon': 5}}, 'legacy'
-    except Exception:
-        return None, None
-
-
-def select_model(models, ticker):
-    """Pilih universal sebagai default, per-emiten hanya fallback legacy."""
-    meta = models.get('_meta') if isinstance(models.get('_meta'), dict) else {}
-    default_model = meta.get('default_model', 'universal')
-    if default_model == 'universal' and 'universal' in models:
-        return models['universal'], 'universal'
-    if ticker.upper() in models:
-        return models[ticker.upper()], 'per_emiten'
-    if 'universal' in models:
-        return models['universal'], 'universal'
-    return None, None
-
 
 # ─── Indicator Calculations ───────────────────────────────────────────────────
 
@@ -229,112 +195,6 @@ def price_range(close, horizon):
     }
 
 
-def prediction_label(pred):
-    return "UP" if int(pred) == 1 else "DOWN" if int(pred) == -1 else "NEUTRAL"
-
-
-def clamp(value, low, high):
-    return max(low, min(high, value))
-
-
-def evaluate_recent_signals(history_df, horizon):
-    """Backtest ringan berbasis forward return setelah fee/slippage buffer."""
-    wins = 0
-    total = 0
-    buy_wins = buy_total = 0
-    sell_wins = sell_total = 0
-    returns = []
-    actionable_trades = 0
-    equity = 1.0
-    peak = 1.0
-    max_drawdown = 0.0
-    trade_details = []
-
-    for i in range(len(history_df) - horizon):
-        sig = int(history_df["pred"].iloc[i])
-        if sig == 0:
-            continue
-
-        current_price = float(history_df["Close"].iloc[i])
-        future_price = float(history_df["Close"].iloc[i + horizon])
-        atr_val = float(history_df["ATR"].iloc[i]) if "ATR" in history_df else 0.0
-        min_edge_pct = max(
-            FEE_BUFFER_PCT,
-            (atr_val / current_price * 100 * MIN_EDGE_ATR_MULT) if current_price > 0 else FEE_BUFFER_PCT,
-        )
-
-        gross_pct = (
-            (future_price - current_price) / current_price * 100
-            if sig == 1
-            else (current_price - future_price) / current_price * 100
-        )
-        net_pct = gross_pct - FEE_BUFFER_PCT
-        is_win = net_pct > 0
-        qualified = net_pct >= min_edge_pct
-
-        total += 1
-        wins += 1 if is_win else 0
-        if sig == 1:
-            buy_total += 1
-            buy_wins += 1 if is_win else 0
-        else:
-            sell_total += 1
-            sell_wins += 1 if is_win else 0
-
-        if sig == 1:
-            actionable_trades += 1
-            returns.append(net_pct)
-            trade_return = max(net_pct / 100, -0.99)
-            equity *= (1 + trade_return)
-            peak = max(peak, equity)
-            drawdown_pct = (equity / peak - 1) * 100 if peak > 0 else 0
-            max_drawdown = min(max_drawdown, drawdown_pct)
-
-        trade_details.append({
-            "date": history_df.index[i].strftime("%d %b"),
-            "signal": "BUY" if sig == 1 else "SELL",
-            "price": current_price,
-            "result": "WIN" if is_win else "LOSS",
-            "qualified": qualified,
-            "profit_pct": round(net_pct, 2),
-            "gross_pct": round(gross_pct, 2),
-            "min_edge_pct": round(min_edge_pct, 2),
-        })
-
-    gains = sum(r for r in returns if r > 0)
-    losses = abs(sum(r for r in returns if r < 0))
-    profit_factor = round(gains / losses, 2) if losses > 0 else (round(gains, 2) if gains > 0 else 0)
-
-    return {
-        "win_rate": round(wins / total * 100, 1) if total else 0,
-        "signal_count": total,
-        "actionable_trades": actionable_trades,
-        "avg_return_pct": round(float(np.mean(returns)), 2) if returns else 0,
-        "profit_factor": profit_factor,
-        "max_drawdown_pct": round(max_drawdown, 2),
-        "buy_win_rate": round(buy_wins / buy_total * 100, 1) if buy_total else None,
-        "sell_win_rate": round(sell_wins / sell_total * 100, 1) if sell_total else None,
-        "recent_trades": list(reversed(trade_details[-5:])),
-    }
-
-
-def get_strength(model, x_last):
-    """Confidence lebih stabil: probability jika ada, fallback sigmoid margin."""
-    try:
-        proba = model.predict_proba(x_last)[0]
-        return clamp(float(max(proba)), 0.0, 0.99), "probability"
-    except Exception:
-        pass
-
-    try:
-        scores = model.decision_function(x_last)[0]
-        margin = float(max(abs(s) for s in scores)) if hasattr(scores, "__len__") else float(abs(scores))
-        confidence = 0.5 + 0.5 * (margin / (1 + abs(margin)))
-        return clamp(confidence, 0.0, 0.95), "margin"
-    except Exception:
-        return 0.0, "unknown"
-
-
 def build_market_context(last):
     regime_score = int(safe_float(last.get("MARKET_REGIME_SCORE"), 0) or 0)
     regime = "bullish" if regime_score > 0 else "bearish" if regime_score < 0 else "sideways"
@@ -346,113 +206,15 @@ def build_market_context(last):
     }
 
 
-def apply_signal_filters(raw_prediction, strength, band, market_context, indicators):
-    """Post-filter: tahan sinyal lemah jika melawan flow, trend, atau market regime."""
-    score = 0
-    notes = []
-
-    if raw_prediction == "UP":
-        if market_context["regime"] == "bullish":
-            score += 1
-            notes.append("IHSG mendukung BUY")
-        elif market_context["regime"] == "bearish":
-            score -= 1
-            notes.append("BUY melawan IHSG bearish")
-
-        rs = market_context.get("relative_strength_20d")
-        if rs is not None and rs > 0:
-            score += 1
-            notes.append("relative strength positif")
-        elif rs is not None and rs < -0.03:
-            score -= 1
-            notes.append("relative strength lemah")
-
-    elif raw_prediction == "DOWN":
-        if market_context["regime"] == "bearish":
-            score += 1
-            notes.append("IHSG mendukung SELL")
-        elif market_context["regime"] == "bullish":
-            score -= 1
-            notes.append("SELL melawan IHSG bullish")
-
-    if band:
-        inst_flow = float(band.get("net_foreign") or 0) + float(band.get("net_local") or 0)
-        retail_flow = float(band.get("net_retail") or 0)
-        if raw_prediction == "UP":
-            if inst_flow > 0:
-                score += 1
-                notes.append("institusi akumulasi")
-            if inst_flow < 0:
-                score -= 1
-                notes.append("institusi distribusi")
-            if retail_flow > 0 and inst_flow < 0:
-                score -= 1
-                notes.append("retail dominan saat institusi jual")
-        elif raw_prediction == "DOWN":
-            if inst_flow < 0:
-                score += 1
-                notes.append("distribusi institusi")
-            if inst_flow > 0:
-                score -= 1
-                notes.append("institusi masih akumulasi")
-
-    adx = indicators.get("adx")
-    if raw_prediction != "NEUTRAL" and adx is not None and adx < 15:
-        score -= 1
-        notes.append("ADX rendah: trend lemah")
-
-    final_prediction = raw_prediction
-    adjusted_strength = strength
-    if raw_prediction != "NEUTRAL":
-        adjusted_strength = clamp(strength + score * 0.04, 0.05, 0.95)
-        if score <= -2 and strength < 0.72:
-            final_prediction = "NEUTRAL"
-            notes.append("sinyal ditahan oleh filter kualitas")
-
-    if final_prediction == "NEUTRAL":
-        quality = "WAIT"
-    elif score >= 2 and adjusted_strength >= 0.65:
-        quality = "HIGH"
-    elif score >= 0:
-        quality = "MEDIUM"
-    else:
-        quality = "LOW"
-
-    return {
-        "prediction": final_prediction,
-        "strength": round(adjusted_strength, 2),
-        "signal_quality": quality,
-        "filter_score": score,
-        "filters": notes,
-    }
-
-
-def build_trading_plan(prediction, last_price, atr_val):
-    if prediction == "UP":
-        return {
-            "entry": round(last_price, 0),
-            "target_profit": round(last_price + atr_val * 2, 0),
-            "stop_loss": round(last_price - atr_val * 1.5, 0),
-            "tp_percent": round(atr_val * 2 / last_price * 100, 2),
-            "sl_percent": round(-atr_val * 1.5 / last_price * 100, 2),
-            "note": "Kondisi Bullish. Potensi kenaikan terdeteksi.",
-        }
-    if prediction == "DOWN":
-        return {
-            "entry": round(last_price, 0),
-            "target_profit": round(last_price - atr_val * 2, 0),
-            "stop_loss": round(last_price + atr_val * 1.5, 0),
-            "tp_percent": round(-atr_val * 2 / last_price * 100, 2),
-            "sl_percent": round(atr_val * 1.5 / last_price * 100, 2),
-            "note": "Kondisi Bearish. Hindari spekulasi beli.",
-        }
+def build_trading_plan(last_price, atr_val):
+    """Level risiko berbasis ATR (TP 2x, SL 1.5x) — bukan sinyal arah."""
     return {
         "entry": round(last_price, 0),
-        "target_profit": 0,
-        "stop_loss": 0,
-        "tp_percent": 0,
-        "sl_percent": 0,
-        "note": "Sideways atau sinyal belum lolos filter kualitas.",
+        "target_profit": round(last_price + atr_val * 2, 0),
+        "stop_loss": round(last_price - atr_val * 1.5, 0),
+        "tp_percent": round(atr_val * 2 / last_price * 100, 2),
+        "sl_percent": round(-atr_val * 1.5 / last_price * 100, 2),
+        "note": "Kalau mau entry: TP 2× ATR, SL 1.5× ATR (RR 1.33). Ini level risiko, bukan sinyal beli.",
     }
 
 
@@ -541,22 +303,7 @@ def get_prediction(ticker):
         df.ffill(inplace=True)
         df.bfill(inplace=True)
 
-        # 2. Load & pilih model. Range cuma butuh harga, jadi tetap dikirim walau model tidak ada.
-        models, load_mode = load_models()
-        if models is None:
-            return {"status": "error", "message": "Tidak ada model tersedia (best_models.pkl / trading_model.pkl)",
-                    "price_range": price_range(df['Close'], 5)}
-
-        model_info, model_type = select_model(models, ticker)
-        if model_info is None:
-            return {"status": "error", "message": f"Tidak ada model untuk {ticker}",
-                    "price_range": price_range(df['Close'], 5)}
-
-        svm_model    = model_info['model']
-        feature_cols = model_info['features']
-        horizon      = model_info.get('horizon', 5)
-
-        # 3. Hitung indikator + market regime
+        # 2. Hitung indikator + market regime
         df = calculate_indicators(df)
         df = add_market_features(df, fetch_market_history())
         df.dropna(inplace=True)
@@ -564,27 +311,10 @@ def get_prediction(ticker):
         if len(df) < 10:
             return {"status": "error", "message": f"Data {ticker} tidak cukup setelah kalkulasi indikator."}
 
-        # 4. Prediksi history (60 hari terakhir)
-        history_df        = df.tail(60).copy()
-        available_features = [f for f in feature_cols if f in history_df.columns]
-        if not available_features:
-            return {"status": "error", "message": "Tidak ada fitur model yang cocok dengan data runtime."}
-        X_history         = history_df[available_features].ffill().fillna(0).values
-
-        history_preds = svm_model.predict(X_history)
-        history_df    = history_df.iloc[-len(history_preds):].copy()
-        history_df['pred'] = history_preds
-
-        # 5. Backtest ringkas + confidence
-        backtest = evaluate_recent_signals(history_df, horizon)
+        # 3. Indikator terakhir + flow
+        history_df = df.tail(60)
         last_price = float(df['Close'].iloc[-1])
         atr_val    = float(df['ATR'].iloc[-1])
-        raw_prediction = prediction_label(history_preds[-1])
-
-        X_last = history_df[available_features].iloc[[-1]].ffill().fillna(0).values
-        strength, confidence_method = get_strength(svm_model, X_last)
-
-        # 6. Filter kualitas sinyal
         band = fetch_bandarmology(ticker)
         last = df.iloc[-1]
         bb_pos = (
@@ -603,11 +333,9 @@ def get_prediction(ticker):
             "close_pos": safe_float(last.get('close_pos')),
         }
         market_context = build_market_context(last)
-        signal_filter = apply_signal_filters(raw_prediction, strength, band, market_context, indicators)
-        final_prediction = signal_filter["prediction"]
-        plan = build_trading_plan(final_prediction, last_price, atr_val)
+        plan = build_trading_plan(last_price, atr_val)
 
-        # 7. Chart history
+        # 4. Chart history
         chart_data = [
             {
                 "time":   idx.strftime('%Y-%m-%d'),
@@ -615,32 +343,20 @@ def get_prediction(ticker):
                 "high":   float(row['High']),
                 "low":    float(row['Low']),
                 "close":  float(row['Close']),
-                "signal": int(row['pred']),
             }
             for idx, row in history_df.iterrows()
         ]
 
-        # 8. Susun response
+        # 5. Susun response
         return {
             "status":      "success",
             "ticker":      ticker.upper(),
-            "model_type":  model_type,
-            "prediction":  final_prediction,
-            "raw_prediction": raw_prediction,
-            "strength":    signal_filter["strength"],
-            "confidence_method": confidence_method,
-            "signal_quality": signal_filter["signal_quality"],
-            "filter_score": signal_filter["filter_score"],
-            "filters": signal_filter["filters"],
-            "win_rate":    backtest["win_rate"],
-            "backtest":    {k: v for k, v in backtest.items() if k != "recent_trades"},
             "market":      market_context,
             "trading_plan": plan,
-            "price_range": price_range(df['Close'], horizon),
+            "price_range": price_range(df['Close'], 5),
             "indicators":  indicators,
             "bandarmology":  band,
             "chart_history": chart_data,
-            "recent_trades": backtest["recent_trades"],
         }
 
     except Exception as e:

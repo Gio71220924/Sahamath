@@ -1,7 +1,6 @@
 import sys
 import json
 import warnings
-import joblib
 import pandas as pd
 import numpy as np
 import yfinance as yf
@@ -17,38 +16,6 @@ TICKERS = [
     'ADRO', 'AKRA', 'BUMI', 'BYAN', 'DEWA', 'DSSA',
     'ENRG', 'GEMS', 'ITMG', 'MEDC', 'PGAS', 'PTBA', 'PTRO', 'RAJA'
 ]
-
-FEE_BUFFER_PCT = 0.45
-MIN_EDGE_ATR_MULT = 0.5
-
-
-def load_models():
-    try:
-        bundle = joblib.load('best_models.pkl')
-        if isinstance(bundle, dict) and 'universal' in bundle:
-            return bundle
-        raise ValueError("Format best_models.pkl tidak valid")
-    except Exception:
-        pass
-
-    try:
-        old = joblib.load('trading_model.pkl')
-        return {'universal': {'model': old['model'], 'features': old['features'], 'horizon': 5}}
-    except Exception:
-        return None
-
-
-def select_model(models, ticker):
-    meta = models.get('_meta') if isinstance(models.get('_meta'), dict) else {}
-    default_model = meta.get('default_model', 'universal')
-    if default_model == 'universal' and 'universal' in models:
-        return models['universal'], 'universal'
-    if ticker.upper() in models:
-        return models[ticker.upper()], 'per_emiten'
-    if 'universal' in models:
-        return models['universal'], 'universal'
-    return None, None
-
 
 def calculate_indicators(df):
     close  = df['Close'].squeeze()
@@ -187,10 +154,6 @@ def safe_float(val, digits=4):
         return None
 
 
-def prediction_label(pred):
-    return 'UP' if int(pred) == 1 else 'DOWN' if int(pred) == -1 else 'NEUTRAL'
-
-
 def tick_size(price):
     if price < 200:
         return 1
@@ -303,7 +266,7 @@ def triple_confirmation(df):
     }
 
 
-def build_swing_setup(df, prediction, strength):
+def build_swing_setup(df):
     last = df.iloc[-1]
     close = float(last['Close'])
     ma20 = safe_float(last.get('MA20'))
@@ -341,12 +304,6 @@ def build_swing_setup(df, prediction, strength):
         score += 1
     if stoch > 85:
         score -= 1
-    if prediction == 'UP':
-        score += 1
-    elif prediction == 'DOWN':
-        score -= 1
-    if strength >= 0.65:
-        score += 1
     score += vsa['score']
     score = max(0, min(12, score))
 
@@ -404,82 +361,7 @@ def build_swing_setup(df, prediction, strength):
     }
 
 
-def evaluate_signals(hist, horizon):
-    wins = total = 0
-    returns = []
-    actionable = 0
-    equity = peak = 1.0
-    max_dd = 0.0
-
-    for i in range(len(hist) - horizon):
-        sig = int(hist['pred'].iloc[i])
-        if sig == 0:
-            continue
-        cp = float(hist['Close'].iloc[i])
-        fp = float(hist['Close'].iloc[i + horizon])
-        gross = (fp - cp) / cp * 100 if sig == 1 else (cp - fp) / cp * 100
-        net = gross - FEE_BUFFER_PCT
-        total += 1
-        wins += 1 if net > 0 else 0
-        if sig == 1:
-            actionable += 1
-            returns.append(net)
-            trade_return = max(net / 100, -0.99)
-            equity *= (1 + trade_return)
-            peak = max(peak, equity)
-            drawdown_pct = (equity / peak - 1) * 100 if peak > 0 else 0
-            max_dd = min(max_dd, drawdown_pct)
-
-    gains = sum(r for r in returns if r > 0)
-    losses = abs(sum(r for r in returns if r < 0))
-    pf = round(gains / losses, 2) if losses > 0 else (round(gains, 2) if gains > 0 else 0)
-    return {
-        'win_rate': round(wins / total * 100, 1) if total else 0,
-        'signal_count': total,
-        'actionable_trades': actionable,
-        'avg_return_pct': round(float(np.mean(returns)), 2) if returns else 0,
-        'profit_factor': pf,
-        'max_drawdown_pct': round(max_dd, 2),
-    }
-
-
-def get_strength(model, x_last):
-    try:
-        return max(0, min(0.99, float(max(model.predict_proba(x_last)[0]))))
-    except Exception:
-        pass
-    try:
-        scores = model.decision_function(x_last)[0]
-        margin = float(max(abs(s) for s in scores)) if hasattr(scores, '__len__') else float(abs(scores))
-        return max(0, min(0.95, 0.5 + 0.5 * (margin / (1 + abs(margin)))))
-    except Exception:
-        return 0.0
-
-
-def apply_market_filter(raw_prediction, strength, last):
-    score = 0
-    regime_score = int(safe_float(last.get('MARKET_REGIME_SCORE'), 0) or 0)
-    rel_strength = safe_float(last.get('REL_STRENGTH_20D'))
-    adx = safe_float(last.get('ADX'))
-
-    if raw_prediction == 'UP':
-        score += 1 if regime_score > 0 else -1 if regime_score < 0 else 0
-        score += 1 if rel_strength is not None and rel_strength > 0 else -1 if rel_strength is not None and rel_strength < -0.03 else 0
-    elif raw_prediction == 'DOWN':
-        score += 1 if regime_score < 0 else -1 if regime_score > 0 else 0
-    if raw_prediction != 'NEUTRAL' and adx is not None and adx < 15:
-        score -= 1
-
-    prediction = raw_prediction
-    adjusted = max(0.05, min(0.95, strength + score * 0.04))
-    if raw_prediction != 'NEUTRAL' and score <= -2 and strength < 0.72:
-        prediction = 'NEUTRAL'
-
-    quality = 'WAIT' if prediction == 'NEUTRAL' else 'HIGH' if score >= 2 and adjusted >= 0.65 else 'MEDIUM' if score >= 0 else 'LOW'
-    return prediction, round(adjusted, 2), quality, score
-
-
-def screen_ticker(ticker, df_raw, models, market_df=None, strategies=None):
+def screen_ticker(ticker, df_raw, market_df=None, strategies=None):
     try:
         # Extract single-ticker slice dari batch download
         if isinstance(df_raw.columns, pd.MultiIndex):
@@ -516,33 +398,8 @@ def screen_ticker(ticker, df_raw, models, market_df=None, strategies=None):
         if len(df) < 10:
             return {'ticker': ticker, 'status': 'error', 'message': 'Data tidak cukup setelah indikator'}
 
-        model_info, model_type = select_model(models, ticker)
-        if model_info is None:
-            return {'ticker': ticker, 'status': 'error', 'message': 'Tidak ada model'}
-
-        svm_model    = model_info['model']
-        feature_cols = model_info['features']
-        horizon      = model_info.get('horizon', 5)
-
-        available = [f for f in feature_cols if f in df.columns]
-        if not available:
-            return {'ticker': ticker, 'status': 'error', 'message': 'Tidak ada fitur cocok'}
-
-        # Backtest ringkas + last prediction dari 60 hari terakhir
-        hist = df.tail(60).copy()
-        hist_x = hist[available].ffill().fillna(0).values
-        hist_preds = svm_model.predict(hist_x)
-        hist = hist.iloc[-len(hist_preds):].copy()
-        hist['pred'] = hist_preds
-
-        backtest = evaluate_signals(hist, horizon)
-        raw_prediction = prediction_label(hist_preds[-1])
         last = df.iloc[-1]
-
-        X_last = df[available].iloc[[-1]].ffill().fillna(0).values
-        strength = get_strength(svm_model, X_last)
-        prediction, strength, quality, filter_score = apply_market_filter(raw_prediction, strength, last)
-        swing = build_swing_setup(df, prediction, strength)
+        swing = build_swing_setup(df)
 
         strategy_results = {}
         if strategies and 'triple' in strategies:
@@ -553,14 +410,6 @@ def screen_ticker(ticker, df_raw, models, market_df=None, strategies=None):
         return {
             'ticker':     ticker,
             'status':     'success',
-            'prediction': prediction,
-            'raw_prediction': raw_prediction,
-            'strength':   strength,
-            'signal_quality': quality,
-            'filter_score': filter_score,
-            'win_rate':   backtest['win_rate'],
-            'backtest':   backtest,
-            'model_type': model_type,
             'price':      safe_float(last.get('Close')),
             'swing':      swing,
             'strategies': strategy_results,
@@ -584,11 +433,6 @@ def run_screener(strategies=None, mode='and'):
     if strategies is None:
         strategies = ['triple']
 
-    models = load_models()
-    if models is None:
-        print(json.dumps({'status': 'error', 'message': 'best_models.pkl tidak ditemukan'}))
-        return
-
     tickers_jk = [t + '.JK' for t in TICKERS]
     try:
         df_all = yf.download(
@@ -605,7 +449,7 @@ def run_screener(strategies=None, mode='and'):
         print(json.dumps({'status': 'error', 'message': f'Download gagal: {e}'}))
         return
 
-    results = [screen_ticker(t, df_all, models, market_df, strategies=strategies) for t in TICKERS]
+    results = [screen_ticker(t, df_all, market_df, strategies=strategies) for t in TICKERS]
     results.sort(key=lambda r: r.get('swing', {}).get('score', -1) if r.get('status') == 'success' else -1, reverse=True)
     print(json.dumps({'status': 'ok', 'mode': mode, 'strategies': strategies, 'results': results}))
 
