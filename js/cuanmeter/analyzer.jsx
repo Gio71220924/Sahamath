@@ -1039,6 +1039,29 @@ function AiAnalysisCard({ data, loading, error, onRetry }) {
   );
 }
 
+function PriceRangeCard({ r }) {
+  if (!r) return null;
+  return (
+    <div style={{ marginTop: 10, padding: '12px 14px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 12 }}>
+      <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.08em', color: 'var(--fg-muted)', textTransform: 'uppercase', marginBottom: 6 }}>
+        Kisaran harga {r.horizon} hari (80%)
+      </div>
+      <div className="mono tnum" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, fontSize: 15, fontWeight: 800 }}>
+        <span style={{ color: 'var(--danger)' }}>
+          Rp {r.p10.toLocaleString('id-ID')} <span style={{ fontSize: 11 }}>({r.p10_pct}%)</span>
+        </span>
+        <span style={{ color: 'var(--fg-faint)' }}>–</span>
+        <span style={{ color: 'var(--primary)' }}>
+          Rp {r.p90.toLocaleString('id-ID')} <span style={{ fontSize: 11 }}>(+{r.p90_pct}%)</span>
+        </span>
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--fg-muted)', marginTop: 6, lineHeight: 1.5 }}>
+        Dari volatilitas 20 hari: 8 dari 10 kali, harga {r.horizon} hari ke depan ada di kisaran ini. Ini ukuran risiko, bukan arah.
+      </div>
+    </div>
+  );
+}
+
 function Analyzer({ initialTicker }) {
   const [ticker, setTicker] = useStateZ('BBRI');
   const [active, setActive] = useStateZ('BBRI');
@@ -1474,6 +1497,7 @@ function Analyzer({ initialTicker }) {
               <div style={{ fontSize: 12, color: 'var(--fg-muted)', padding: '10px 12px', background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', lineHeight: 1.5 }}>
                 {mlData.trading_plan.note}
               </div>
+              <PriceRangeCard r={mlData.price_range} />
               {/* Indicators mini grid */}
               <div className="analyzer-metric-grid" style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                 {[
@@ -1496,6 +1520,7 @@ function Analyzer({ initialTicker }) {
           ) : mlData?.status === 'error' ? (
             <div style={{ fontSize: 13, color: 'var(--danger)', padding: 16, background: 'color-mix(in oklab, var(--danger) 8%, transparent)', borderRadius: 'var(--radius-sm)' }}>
               {mlData.message}
+              <PriceRangeCard r={mlData.price_range} />
             </div>
           ) : (
             <div style={{ fontSize: 13, color: 'var(--fg-muted)', padding: 16, background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)', lineHeight: 1.6 }}>

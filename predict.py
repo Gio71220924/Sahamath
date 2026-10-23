@@ -206,6 +206,29 @@ def safe_float(val, digits=4):
         return None
 
 
+RANGE_Z = 1.2816  # z-score P90 distribusi normal; P10 = -RANGE_Z
+
+
+def price_range(close, horizon):
+    """Kisaran harga P10-P90 `horizon` hari: lognormal dari volatilitas 20 hari (= Monte Carlo GBM
+    tanpa simulasi). Walk-forward di 560 saham IDX (train_range.py): coverage 80.4%,
+    lebih terkalibrasi dari LightGBM quantile (69.9%) dan kuantil historis (74.2%)."""
+    vol = np.log(close).diff().tail(20).std()
+    if not np.isfinite(vol) or vol <= 0:
+        return None
+    spread = RANGE_Z * vol * np.sqrt(horizon)
+    last = float(close.iloc[-1])
+    return {
+        "horizon": horizon,
+        "confidence": 0.8,
+        "p10": round(last * np.exp(-spread)),
+        "p50": round(last),
+        "p90": round(last * np.exp(spread)),
+        "p10_pct": round((np.exp(-spread) - 1) * 100, 1),
+        "p90_pct": round((np.exp(spread) - 1) * 100, 1),
+    }
+
+
 def prediction_label(pred):
     return "UP" if int(pred) == 1 else "DOWN" if int(pred) == -1 else "NEUTRAL"
 
@@ -500,20 +523,7 @@ def fetch_bandarmology(ticker):
 
 def get_prediction(ticker):
     try:
-        # 1. Load & pilih model
-        models, load_mode = load_models()
-        if models is None:
-            return {"status": "error", "message": "Tidak ada model tersedia (best_models.pkl / trading_model.pkl)"}
-
-        model_info, model_type = select_model(models, ticker)
-        if model_info is None:
-            return {"status": "error", "message": f"Tidak ada model untuk {ticker}"}
-
-        svm_model    = model_info['model']
-        feature_cols = model_info['features']
-        horizon      = model_info.get('horizon', 5)
-
-        # 2. Download OHLCV
+        # 1. Download OHLCV
         fmt_ticker = f"{ticker}.JK" if not ticker.upper().endswith('.JK') else ticker
         df = yf.download(
             fmt_ticker, period="100d", interval="1d",
@@ -530,6 +540,21 @@ def get_prediction(ticker):
             df[col] = pd.to_numeric(df[col], errors='coerce')
         df.ffill(inplace=True)
         df.bfill(inplace=True)
+
+        # 2. Load & pilih model. Range cuma butuh harga, jadi tetap dikirim walau model tidak ada.
+        models, load_mode = load_models()
+        if models is None:
+            return {"status": "error", "message": "Tidak ada model tersedia (best_models.pkl / trading_model.pkl)",
+                    "price_range": price_range(df['Close'], 5)}
+
+        model_info, model_type = select_model(models, ticker)
+        if model_info is None:
+            return {"status": "error", "message": f"Tidak ada model untuk {ticker}",
+                    "price_range": price_range(df['Close'], 5)}
+
+        svm_model    = model_info['model']
+        feature_cols = model_info['features']
+        horizon      = model_info.get('horizon', 5)
 
         # 3. Hitung indikator + market regime
         df = calculate_indicators(df)
@@ -611,6 +636,7 @@ def get_prediction(ticker):
             "backtest":    {k: v for k, v in backtest.items() if k != "recent_trades"},
             "market":      market_context,
             "trading_plan": plan,
+            "price_range": price_range(df['Close'], horizon),
             "indicators":  indicators,
             "bandarmology":  band,
             "chart_history": chart_data,
