@@ -227,11 +227,12 @@ def market_obs(market):
     return obs
 
 
-def regime_probs(obs, train_end):
+def regime_probs(obs, train_end, sort_col=0):
     """Fit HMM di data <= train_end, lalu filtered prob (forward pass) untuk semua tanggal.
 
     Filtered = prob di hari t cuma pakai data <= t. Jangan pakai hmm.predict_proba:
     itu smoothed (forward-backward), ngintip data masa depan.
+    sort_col: kolom obs untuk urutan state (0 = ret: bearish..bullish, 1 = vol: tenang..volatil).
     """
     fit_obs = obs[obs.index <= train_end]
     z = ((obs - fit_obs.mean()) / fit_obs.std()).values  # skala dari train saja
@@ -246,7 +247,7 @@ def regime_probs(obs, train_end):
         a = emis[t] * prior + 1e-300
         alpha[t] = a / a.sum()
         prior = alpha[t] @ hmm.transmat_
-    order = np.argsort(hmm.means_[:, 0])  # P0 = bearish ... P2 = bullish
+    order = np.argsort(hmm.means_[:, sort_col])
     return pd.DataFrame(alpha[:, order], index=obs.index,
                         columns=[f"REGIME_P{k}" for k in range(N_REGIMES)])
 
