@@ -995,7 +995,8 @@ async function loadCalendarCache(forceRefresh = false) {
 
 function handleCalendar(query, res) {
     const type = (query.type || 'all').toString().toLowerCase();
-    const range = query.range === 'week' ? 'week' : 'month';
+    // upcoming = hari ini s/d +30 hari (cache KSEI mencakup bulan ini + bulan depan)
+    const range = ['week', 'upcoming'].includes(query.range) ? query.range : 'month';
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const weekRange = monthWeekRange(today, query.week);
@@ -1003,8 +1004,9 @@ function handleCalendar(query, res) {
     const defaultLimit = range === 'week' ? 40 : 300;
     const limit = Math.max(1, Math.min(parseInt(query.limit || String(defaultLimit), 10) || defaultLimit, maxLimit));
     const forceRefresh = query.refresh === '1';
-    const rangeStart = range === 'week' ? weekRange.start : startOfMonth(today);
-    const rangeEnd = range === 'week' ? weekRange.end : endOfMonth(today);
+    const rangeStart = range === 'week' ? weekRange.start : range === 'upcoming' ? today : startOfMonth(today);
+    const rangeEnd = range === 'week' ? weekRange.end
+        : range === 'upcoming' ? new Date(today.getTime() + 30 * 86400000) : endOfMonth(today);
 
     loadCalendarCache(forceRefresh).then((calendar) => {
         const filtered = calendar.events

@@ -168,8 +168,45 @@ const ISO_ICONS = (() => {
       box(-30, -10, 0, 12, 12, 30, red), box(-30, 4, 0, 12, 12, 20, red), box(-30, 18, 0, 12, 12, 10, red),
       box(-12, -28, 0, 12, 12, 10, green), box(2, -28, 0, 12, 12, 20, green), box(16, -28, 0, 12, 12, 30, green),
     ]),
+    analyzer: flat([box(-22, -4, 8, 8, 8, 26, green), box(-6, -4, 4, 8, 8, 16, red), box(10, -4, 12, 8, 8, 34, green)]),
+    heatmap: flat([
+      box(-27, -27, 0, 16, 16, 12, green), box(-9, -27, 0, 16, 16, 6, red), box(9, -27, 0, 16, 16, 18, green),
+      box(-27, -9, 0, 16, 16, 5, red), box(-9, -9, 0, 16, 16, 22, green), box(9, -9, 0, 16, 16, 8, red),
+      box(-27, 9, 0, 16, 16, 15, green), box(-9, 9, 0, 16, 16, 4, red), box(9, 9, 0, 16, 16, 10, green),
+    ]),
+    profilrisiko: flat([box(-24, -24, 0, 48, 48, 9, green), box(-17, -17, 10, 34, 34, 9, ['#f0c98a', '#d39a3c', '#a8732a']), box(-10, -10, 20, 20, 20, 9, red)]),
   };
 })();
+
+/* ---------- Nota (struk) primitives — dipakai Analyzer & Landing ---------- */
+// Warna uang rupiah: hijau Rp20rb naik, merah Rp100rb turun, biru Rp50rb kisaran.
+// Kertas struk tetap terang di dark mode: itu kertas.
+const NOTA_INK = '#191b1a';
+const NOTA_UP = '#1f7a4d';
+const NOTA_DOWN = '#b8323c';
+const NOTA_INFO = '#2b57a6';
+
+function NotaEdge({ bottom }) {
+  let d = bottom ? 'M0 0' : 'M0 10';
+  for (let i = 0; i < 34; i++) d += bottom ? ` L${i * 10 + 5} 10 L${i * 10 + 10} 0` : ` L${i * 10 + 5} 0 L${i * 10 + 10} 10`;
+  return (
+    <svg aria-hidden="true" viewBox="0 0 340 10" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: 10 }}>
+      <path d={d + ' Z'} fill="#fcfcfa" />
+    </svg>
+  );
+}
+
+function NotaRow({ k, v, c }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+      <span>{k}</span><span style={{ color: c || NOTA_INK }}>{v}</span>
+    </div>
+  );
+}
+
+function NotaCut() {
+  return <div aria-hidden="true" style={{ borderTop: '1.5px dashed #9ca19b', margin: '10px 0' }} />;
+}
 
 function IsoIcon({ name, size = 36 }) {
   const shapes = ISO_ICONS[name];
@@ -743,4 +780,12 @@ Object.assign(window, {
   Footer,
   Sparkline,
   AnimatedNumber,
+  IsoIcon,
+  NotaEdge,
+  NotaRow,
+  NotaCut,
+  NOTA_INK,
+  NOTA_UP,
+  NOTA_DOWN,
+  NOTA_INFO,
 });

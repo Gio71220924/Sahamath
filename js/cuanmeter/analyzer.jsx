@@ -301,249 +301,125 @@ function StrategyPicker({ strategies, mode, onStrategiesChange, onModeChange }) 
 }
 
 /* ---------- Screener Panel ---------- */
-function ScreenerPanel({ data, loading, error, lastScan, onRefresh, onSelect }) {
-  const fmt = (v) => v != null ? (typeof v === 'number' ? v.toLocaleString('id-ID') : v) : '—';
-  const fmtPct = (v) => v != null ? v.toFixed(1) + '%' : '—';
-  const fmtCMF = (v) => v != null ? (v >= 0 ? '+' : '') + v.toFixed(3) : '—';
-  const fmtPrice = (v) => v != null ? v.toLocaleString('id-ID') : '—';
+const SCREEN_GROUPS = [
+  { key: 'watch', title: 'Layak dipantau', note: 'skor 6 ke atas', test: (s) => s >= 6 },
+  { key: 'early', title: 'Mulai terbentuk', note: 'skor 4 sampai 5', test: (s) => s >= 4 && s < 6 },
+  { key: 'skip', title: 'Lewati dulu', note: 'skor di bawah 4', test: (s) => s < 4 },
+];
+const TRIPLE_LABEL = {
+  'STRONG BUY': 'Beli kuat', 'LEAN BUY': 'Condong beli', NEUTRAL: 'Netral',
+  'LEAN SELL': 'Condong jual', 'STRONG SELL': 'Jual kuat',
+};
 
-  const lastScanStr = lastScan
-    ? lastScan.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+function ScreenerPanel({ data, loading, error, lastScan, onRefresh, onSelect }) {
+  const price = (v) => (v != null ? Math.round(v).toLocaleString('id-ID') : '–');
+  const pct = (v) => (v != null ? v.toFixed(1).replace('.', ',') + '%' : '–');
+  const rs = (v) => (v != null ? (v >= 0 ? '+' : '−') + Math.abs(v * 100).toFixed(1).replace('.', ',') + '%' : '–');
+  const scanned = lastScan
+    ? lastScan.toLocaleString('id-ID', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
     : null;
+  const ok = (data || []).filter((r) => r.status !== 'error');
+  const failed = (data || []).filter((r) => r.status === 'error');
+  const th = { padding: '10px 12px 6px', fontWeight: 600, fontSize: 13, color: 'var(--fg-muted)', textAlign: 'right', whiteSpace: 'nowrap' };
+  const td = { padding: 12, textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: 'var(--fg)', whiteSpace: 'nowrap' };
 
   return (
-    <div>
-      {/* Header bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
-          {lastScanStr ? `Scan Terakhir: ${lastScanStr}` : 'Belum pernah di-scan'}
-        </div>
-        <button
-          onClick={onRefresh}
-          disabled={loading}
-          className="btn btn-secondary"
-          style={{ fontSize: 12, padding: '6px 14px', opacity: loading ? 0.5 : 1 }}
-        >
-          {loading ? 'Scanning...' : '↻ Refresh'}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: '12px 24px' }}>
+        <p style={{ margin: 0, maxWidth: '68ch', color: 'var(--fg-muted)', fontSize: 14, lineHeight: 1.6 }}>
+          {data ? `${data.length} saham` : 'Belum dipindai'}{scanned ? `, dipindai ${scanned}` : ''}. Skornya 0 sampai 12,
+          dari tren harga, volume, dan arus dana. Masuk breakout berarti beli kalau harga menembus level itu;
+          masuk pullback berarti menunggu harga turun dulu.
+        </p>
+        <button type="button" onClick={onRefresh} disabled={loading} className="btn btn-secondary" style={{ minHeight: 44, opacity: loading ? 0.6 : 1 }}>
+          {loading ? 'Memindai...' : 'Pindai ulang'}
         </button>
       </div>
 
-      {/* Loading skeleton */}
       {loading && !data && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {Array.from({ length: 14 }).map((_, i) => (
-            <div key={i} style={{
-              height: 40, borderRadius: 'var(--radius-sm)',
-              background: 'var(--surface-2)', animation: 'pulse 1.5s infinite',
-              opacity: 0.6 - i * 0.02,
-            }} />
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} style={{ height: 40, background: 'var(--surface-2)', animation: 'pulse 1.5s infinite', opacity: 0.6 - i * 0.04 }} />
           ))}
         </div>
       )}
 
-      {/* Error state */}
       {error && (
-        <div style={{
-          padding: 20, borderRadius: 'var(--radius)',
-          background: 'rgba(220,50,50,0.08)', border: '1px solid var(--danger)',
-          color: 'var(--danger)', fontSize: 13, textAlign: 'center',
-        }}>
-          {error} — Coba klik Refresh.
+        <div role="alert" style={{ padding: 16, border: '1px solid var(--danger)', color: 'var(--danger)', fontSize: 14 }}>
+          {error}. Coba pindai ulang.
         </div>
       )}
 
-      <div
-        className="card"
-        style={{
-          marginBottom: 16,
-          padding: 16,
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: 10,
-          background: 'var(--surface-2)',
-          border: '1px solid var(--border)',
-        }}
-      >
-        {[
-          { label: 'Swing', value: 'Skor setup swing. 9+ kuat, 6-8 watchlist, 4-5 early setup.' },
-          { label: 'VSA', value: 'Baca volume-spread: Demand/No Supply bagus, Climax/Weak Rally hati-hati.' },
-          { label: 'BO Entry', value: 'Harga trigger breakout di atas resistance pendek.' },
-          { label: 'PB Entry', value: 'Area pullback untuk cicil saat harga turun sehat.' },
-          { label: 'TP / SL', value: 'Target dan batas rugi dari BO Entry, memakai rasio risiko sekitar 1:2.' },
-          { label: 'Vol / RS', value: 'Vol adalah volume vs rata-rata. RS adalah kekuatan saham vs IHSG.' },
-        ].map((item) => (
-          <div key={item.label} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-            <span style={{ color: 'var(--primary)', marginTop: 2 }}>
-              <Icon name="info" size={14} />
-            </span>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--fg)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 3 }}>
-                {item.label}
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--fg-muted)', lineHeight: 1.45 }}>
-                {item.value}
-              </div>
+      {data && SCREEN_GROUPS.map((g) => {
+        const rows = ok.filter((r) => g.test(r.swing?.score ?? 0));
+        if (!rows.length) return null;
+        return (
+          <section key={g.key} aria-labelledby={`scr-${g.key}`}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '4px 14px', borderBottom: '2px solid var(--fg)', paddingBottom: 8 }}>
+              <h3 id={`scr-${g.key}`} style={{ margin: 0, fontSize: 20 }}>{g.title}</h3>
+              <span style={{ color: 'var(--fg-muted)', fontSize: 14 }}>{rows.length} saham, {g.note}</span>
             </div>
-          </div>
-        ))}
-      </div>
-
-
-      {/* Table */}
-      {data && (
-        <div className="screener-mobile-list">
-          {data.map((row) => {
-            const isError = row.status === 'error';
-            const swingColor = isError
-              ? 'var(--fg-faint)'
-              : (row.swing?.score >= 9 ? 'var(--primary)' : row.swing?.score >= 6 ? 'var(--success)' : row.swing?.score >= 4 ? 'var(--warning)' : 'var(--fg-muted)');
-            return (
-              <button
-                key={row.ticker}
-                type="button"
-                className="screener-mobile-card"
-                onClick={() => !isError && onSelect(row.ticker)}
-                disabled={isError}
-              >
-                <div className="screener-mobile-card-head">
-                  <div>
-                    <div className="screener-mobile-ticker">{row.ticker}</div>
-                    <div className="screener-mobile-sub" style={{ color: swingColor }}>
-                      {isError ? row.message : `${row.swing?.score ?? 0} - ${row.swing?.setup ?? '-'}`}
-                    </div>
-                  </div>
-                  <div className="screener-mobile-signal" style={{ color: isError ? 'var(--danger)' : 'var(--fg)' }}>
-                    {isError ? 'ERROR' : fmtPrice(row.price)}
-                  </div>
-                </div>
-
-                {!isError && (
-                  <>
-                    {row.strategies?.triple && (() => {
-                      const tc = row.strategies.triple;
-                      const sigColor = tc.signal.includes('BUY') ? 'var(--primary)' : tc.signal.includes('SELL') ? 'var(--danger)' : 'var(--fg-muted)';
-                      const macdLabel = tc.macd_signal === 'bullish_cross' ? '↑ Bullish' : tc.macd_signal === 'bearish_cross' ? '↓ Bearish' : '— No cross';
-                      return (
-                        <div className="screener-strategy-block">
-                          <div className="screener-strategy-head">
-                            <span className="screener-strategy-label">Triple</span>
-                            <span style={{ color: sigColor, fontWeight: 700, fontSize: 12 }}>{tc.signal}</span>
-                            <span className="screener-strategy-score">{tc.score} / 100</span>
-                          </div>
-                          <div className="screener-score-bar-track">
-                            <div className="screener-score-bar-fill" style={{ width: `${tc.score}%`, background: sigColor }} />
-                          </div>
-                          <div className="screener-strategy-breakdown">
-                            <span>RSI <strong style={{ color: tc.rsi < 40 ? 'var(--primary)' : tc.rsi > 60 ? 'var(--danger)' : 'var(--fg)' }}>{tc.rsi}</strong></span>
-                            <span>MACD <strong>{macdLabel}</strong></span>
-                            <span>MA20 <strong style={{ color: tc.ma20_position === 'above' ? 'var(--primary)' : 'var(--danger)' }}>{tc.ma20_position === 'above' ? '↑ Above' : '↓ Below'}</strong></span>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                    <div className="screener-mobile-meta">
-                      <span>VSA</span>
-                      <strong>{row.swing?.vsa || '-'}</strong>
-                      <span>Vol</span>
-                      <strong>{row.swing?.volume_ratio != null ? row.swing.volume_ratio.toFixed(2) + 'x' : '-'}</strong>
-                      <span>RS</span>
-                      <strong>{row.swing?.relative_strength_20d != null ? (row.swing.relative_strength_20d * 100).toFixed(1) + '%' : '-'}</strong>
-                    </div>
-                    <div className="screener-mobile-levels">
-                      {[
-                        ['BO', fmtPrice(row.swing?.bo_entry ?? row.swing?.entry)],
-                        ['PB', fmtPrice(row.swing?.pb_entry)],
-                        ['TP', fmtPrice(row.swing?.target)],
-                        ['SL', fmtPrice(row.swing?.stop_loss)],
-                      ].map(([label, value]) => (
-                        <div key={label}>
-                          <span>{label}</span>
-                          <strong>{value}</strong>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {data && (
-        <div className="screener-table-wrap" style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid var(--border)' }}>
-                {['Ticker', 'Strategi', 'Skor', 'Swing', 'VSA', 'BO Entry', 'PB Entry', 'TP', 'SL', 'Risk', 'Vol', 'RS', 'Harga'].map((h) => (
-                  <th key={h} style={{
-                    padding: '8px 12px', textAlign: h === 'Ticker' ? 'left' : 'right',
-                    fontSize: 11, fontWeight: 800, letterSpacing: '0.06em',
-                    color: 'var(--fg-muted)', textTransform: 'uppercase',
-                  }}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((row) => {
-                const isError = row.status === 'error';
-                const bg = 'transparent';
-                return (
-                  <tr
-                    key={row.ticker}
-                    onClick={() => !isError && onSelect(row.ticker)}
-                    style={{
-                      background: bg,
-                      borderBottom: '1px solid var(--border)',
-                      cursor: isError ? 'default' : 'pointer',
-                      transition: 'background 0.15s',
-                    }}
-                    onMouseEnter={(e) => { if (!isError) e.currentTarget.style.background = 'var(--surface-2)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = bg; }}
-                  >
-                    <td style={{ padding: '10px 12px', fontWeight: 800, fontFamily: 'JetBrains Mono, monospace', color: 'var(--fg)' }}>
-                      {row.ticker}
-                    </td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: isError || !row.strategies?.triple ? 'var(--fg-faint)' : row.strategies.triple.signal.includes('BUY') ? 'var(--primary)' : row.strategies.triple.signal.includes('SELL') ? 'var(--danger)' : 'var(--fg-muted)' }}>
-                      {isError || !row.strategies?.triple ? '—' : row.strategies.triple.signal}
-                    </td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right' }}>
-                      {isError || !row.strategies?.triple ? '—' : (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
-                          <span style={{ fontWeight: 700, fontSize: 12, color: 'var(--fg)' }}>{row.strategies.triple.score}</span>
-                          <div style={{ width: 48, height: 4, borderRadius: 2, background: 'var(--border)', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${row.strategies.triple.score}%`, background: row.strategies.triple.signal.includes('BUY') ? 'var(--primary)' : row.strategies.triple.signal.includes('SELL') ? 'var(--danger)' : 'var(--fg-muted)', borderRadius: 2 }} />
-                          </div>
-                        </div>
-                      )}
-                    </td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 900, color: isError ? 'var(--fg-faint)' : (row.swing?.score >= 9 ? 'var(--primary)' : row.swing?.score >= 6 ? 'var(--success)' : row.swing?.score >= 4 ? 'var(--warning)' : 'var(--fg-muted)') }}>
-                      {isError ? <span title={row.message} style={{ fontSize: 11, background: 'var(--danger)', color: '#fff', padding: '2px 6px', borderRadius: 4 }}>Error</span> : `${row.swing?.score ?? 0} · ${row.swing?.setup ?? '-'}`}
-                    </td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right', color: row.swing?.vsa === 'Climax Risk' || row.swing?.vsa === 'Weak Rally' ? 'var(--danger)' : row.swing?.vsa === 'Neutral' ? 'var(--fg-muted)' : 'var(--primary)', fontWeight: 700 }}>
-                      {isError ? '—' : (row.swing?.vsa || '—')}
-                    </td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', color: 'var(--fg)' }}>{isError ? '—' : fmtPrice(row.swing?.bo_entry ?? row.swing?.entry)}</td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', color: 'var(--warning)' }}>{isError ? '—' : fmtPrice(row.swing?.pb_entry)}</td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', color: 'var(--primary)' }}>{isError ? '—' : fmtPrice(row.swing?.target)}</td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', color: 'var(--danger)' }}>{isError ? '—' : fmtPrice(row.swing?.stop_loss)}</td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--fg-muted)' }}>{isError ? '—' : fmtPct(row.swing?.risk_pct)}</td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--fg-muted)', fontFamily: 'JetBrains Mono, monospace' }}>{isError ? '—' : (row.swing?.volume_ratio != null ? row.swing.volume_ratio.toFixed(2) + 'x' : '—')}</td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right', color: row.swing?.relative_strength_20d >= 0 ? 'var(--primary)' : 'var(--danger)', fontFamily: 'JetBrains Mono, monospace' }}>{isError ? '—' : (row.swing?.relative_strength_20d != null ? (row.swing.relative_strength_20d * 100).toFixed(1) + '%' : '—')}</td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', color: 'var(--fg)' }}>{isError ? '—' : fmtPrice(row.price)}</td>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', minWidth: 920, borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th scope="col" style={{ ...th, textAlign: 'left', paddingLeft: 0 }}>Saham</th>
+                    <th scope="col" style={{ ...th, textAlign: 'left' }}>Skor</th>
+                    <th scope="col" style={th}>Harga</th>
+                    <th scope="col" style={th}>Masuk breakout</th>
+                    <th scope="col" style={th}>Masuk pullback</th>
+                    <th scope="col" style={th}>Target</th>
+                    <th scope="col" style={th}>Stop</th>
+                    <th scope="col" style={th}>Risiko</th>
+                    <th scope="col" style={th}>Vs IHSG 20 hari</th>
+                    <th scope="col" style={{ ...th, paddingRight: 0 }}>Triple</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                </thead>
+                <tbody>
+                  {rows.map((r) => {
+                    const s = r.swing || {};
+                    const t = r.strategies?.triple;
+                    const score = s.score ?? 0;
+                    return (
+                      <tr key={r.ticker} style={{ borderTop: '1px solid var(--border)' }}>
+                        <th scope="row" style={{ textAlign: 'left', padding: '12px 12px 12px 0' }}>
+                          <button type="button" onClick={() => onSelect(r.ticker)} style={{ font: 'inherit', fontSize: 16, fontWeight: 800, color: 'var(--fg)', textDecoration: 'underline', textUnderlineOffset: 3, minHeight: 32 }}>
+                            {r.ticker}
+                          </button>
+                        </th>
+                        <td style={{ ...td, textAlign: 'left' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                            {score}/12
+                            <span aria-hidden="true" style={{ display: 'inline-block', width: 60, height: 6, background: 'var(--border)' }}>
+                              <span style={{ display: 'block', height: 6, width: `${(score / 12) * 100}%`, background: 'var(--fg)' }} />
+                            </span>
+                          </span>
+                        </td>
+                        <td style={td}>{price(r.price)}</td>
+                        <td style={td}>{price(s.bo_entry ?? s.entry)}</td>
+                        <td style={td}>{price(s.pb_entry)}</td>
+                        <td style={{ ...td, color: 'var(--success)' }}>{price(s.target)}</td>
+                        <td style={{ ...td, color: 'var(--danger)' }}>{price(s.stop_loss)}</td>
+                        <td style={td}>{pct(s.risk_pct)}</td>
+                        <td style={{ ...td, color: (s.relative_strength_20d ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)' }}>{rs(s.relative_strength_20d)}</td>
+                        <td style={{ ...td, paddingRight: 0, fontFamily: 'inherit' }}>{t ? (TRIPLE_LABEL[t.signal] || t.signal) : '–'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        );
+      })}
 
-      <div style={{ marginTop: 16, fontSize: 11, color: 'var(--fg-faint)', lineHeight: 1.5 }}>
-        Klik baris untuk buka analisis lengkap. Skor swing dari indikator teknikal — bukan rekomendasi investasi. DYOR.
-      </div>
+      {failed.length > 0 && (
+        <p style={{ margin: 0, color: 'var(--fg-muted)', fontSize: 13 }}>Gagal dipindai: {failed.map((r) => r.ticker).join(', ')}.</p>
+      )}
+      <p style={{ margin: 0, maxWidth: '70ch', color: 'var(--fg-muted)', fontSize: 13, lineHeight: 1.6 }}>
+        Setup ini bahan riset, bukan sinyal beli. Dari 294 ribu plan serupa di IDX, stop lebih sering kena duluan
+        daripada target dalam 10 hari. Klik kode saham untuk analisis lengkap.
+      </p>
     </div>
   );
 }
@@ -717,35 +593,8 @@ function PriceRangeCard({ r }) {
 }
 
 /* ---------- Nota rencana trading (struk) + kepemilikan KSEI ---------- */
-// Warna uang rupiah: hijau Rp20rb naik, merah Rp100rb turun, biru Rp50rb kisaran/asing.
-// Kertas struk tetap terang di dark mode: itu kertas.
-const NOTA_INK = '#191b1a';
-const NOTA_UP = '#1f7a4d';
-const NOTA_DOWN = '#b8323c';
-const NOTA_INFO = '#2b57a6';
+// NotaEdge/NotaRow/NotaCut + NOTA_* ada di components.jsx (dipakai Landing juga).
 const OWN_COLORS = { asing: '#2b57a6', ritel: '#a8742c', asuransi: '#3f7f78', reksadana: '#6b4f9a', korporasi: '#8c908b', lainnya: '#c4c8c2' };
-
-function NotaEdge({ bottom }) {
-  let d = bottom ? 'M0 0' : 'M0 10';
-  for (let i = 0; i < 34; i++) d += bottom ? ` L${i * 10 + 5} 10 L${i * 10 + 10} 0` : ` L${i * 10 + 5} 0 L${i * 10 + 10} 10`;
-  return (
-    <svg aria-hidden="true" viewBox="0 0 340 10" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: 10 }}>
-      <path d={d + ' Z'} fill="#fcfcfa" />
-    </svg>
-  );
-}
-
-function NotaRow({ k, v, c }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-      <span>{k}</span><span style={{ color: c || NOTA_INK }}>{v}</span>
-    </div>
-  );
-}
-
-function NotaCut() {
-  return <div aria-hidden="true" style={{ borderTop: '1.5px dashed #9ca19b', margin: '10px 0' }} />;
-}
 
 function NotaCard({ plan, range, ticker }) {
   if (!plan) return null;

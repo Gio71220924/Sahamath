@@ -1,414 +1,131 @@
 /* ============================================================
    landing.jsx — CuanMeter landing page.
-   Sections: Hero · StockMarquee · IHSGChart · ToolsGrid ·
-             GuidesSection · FinalCTA.
-   StockMarquee, IHSGChart, and HeroMockup use TradingView
-   widgets for live data — see tradingview.jsx for the wrapper.
+   Hero = kalkulator profit yang mencetak nota (printer + struk).
+   ToolsGrid = pertanyaan pengguna dengan ikon isometrik (IsoIcon).
+   StockMarquee & IHSGChart use TradingView widgets for live data —
+   see tradingview.jsx for the wrapper.
    Exposes globals: LandingPage.
    ============================================================ */
 
 const { useState: useStateL, useEffect: useEffectL, useMemo: useMemoL } = React;
 
-/* ---------- Hero ---------- */
-function Hero({ onNavigate }) {
+/* ---------- Hero: kalkulator profit yang langsung mencetak nota ---------- */
+const HERO_FEE_BUY = 0.0015;   // sama dengan default ProfitCalc
+const HERO_FEE_SELL = 0.0025;
+
+function HeroPrinter() {
   return (
-    <section style={{ padding: '64px 0 88px', position: 'relative', overflow: 'visible' }}>
-      <div
-        id="hero-grid"
-        className="container"
-        style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 60, alignItems: 'center' }}
-      >
-        <div className="fade-up">
-          <div className="badge" style={{ marginBottom: 24 }}>
-            <Icon name="flash" size={12} />
-            <span>BUAT TRADER GEN-Z</span>
-          </div>
-          <h1
-            style={{
-              fontSize: 'clamp(40px, 6vw, 76px)',
-              lineHeight: 0.98,
-              marginBottom: 20,
-              letterSpacing: '-0.04em',
-            }}
-          >
-            Cuan-mu,<br />
-            <span style={{ color: 'var(--primary)' }}>terukur.</span><br />
-            <span style={{ color: 'var(--fg-muted)' }}>Tanpa drama.</span>
-          </h1>
-          <p
-            style={{
-              fontSize: 19,
-              color: 'var(--fg-muted)',
-              lineHeight: 1.55,
-              marginBottom: 36,
-              maxWidth: 520,
-              fontWeight: 500,
-            }}
-          >
-            Kalkulator saham IDX yang gercep buat hitung{' '}
-            <strong style={{ color: 'var(--fg)' }}>average</strong>, batas{' '}
-            <strong style={{ color: 'var(--fg)' }}>ARA/ARB</strong>, dan{' '}
-            <strong style={{ color: 'var(--fg)' }}>profit bersih</strong>. Free forever, no
-            iklan, no NPS prompt menyebalkan.
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 40 }}>
-            <button className="btn btn-primary" onClick={() => onNavigate('average')}>
-              Hitung Cuan-mu <Icon name="arrow_right" size={16} />
-            </button>
-            <button className="btn btn-secondary" onClick={() => onNavigate('araarb')}>
-              Cek ARA/ARB
-            </button>
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 28,
-              paddingTop: 24,
-              borderTop: '1px solid var(--border)',
-            }}
-          >
-            {[
-              { v: '6',    l: 'Tools' },
-              { v: '100%', l: 'Gratis' },
-              { v: '0',    l: 'Iklan' },
-              { v: '< 1s', l: 'Hitung' },
-            ].map((s, i) => (
-              <div key={i}>
-                <div
-                  className="mono tnum"
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 800,
-                    color: 'var(--fg)',
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  {s.v}
-                </div>
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: 'var(--fg-muted)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                    fontWeight: 600,
-                  }}
-                >
-                  {s.l}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <HeroMockup />
-      </div>
-
-      <style>{`
-        @media (max-width: 900px) {
-          #hero-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
-        }
-      `}</style>
-    </section>
+    <svg role="img" aria-label="Printer struk kasir yang mencetak nota profit" viewBox="0 0 420 132" style={{ width: '100%', maxWidth: 420, height: 'auto', display: 'block', position: 'relative', zIndex: 2 }}>
+      <defs>
+        <linearGradient id="hp-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#4b504c" /><stop offset="1" stopColor="#2a2d2b" /></linearGradient>
+        <linearGradient id="hp-top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#6c716d" /><stop offset="1" stopColor="#525753" /></linearGradient>
+        <linearGradient id="hp-shine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#ffffff" stopOpacity="0" /><stop offset="0.5" stopColor="#ffffff" stopOpacity="0.18" /><stop offset="1" stopColor="#ffffff" stopOpacity="0" /></linearGradient>
+      </defs>
+      <ellipse cx="210" cy="124" rx="196" ry="8" fill="#191b1a" fillOpacity="0.12" />
+      <path d="M46 14 L374 14 Q384 14 390 22 L408 50 L12 50 L30 22 Q36 14 46 14 Z" fill="url(#hp-top)" />
+      <path d="M60 22 L360 22 L372 42 L48 42 Z" fill="#3e423f" />
+      <rect x="12" y="50" width="396" height="66" rx="12" fill="url(#hp-body)" />
+      <rect x="12" y="50" width="396" height="6" fill="url(#hp-shine)" />
+      <text x="34" y="86" fill="#a4aaa3" fontSize="16" fontWeight="700" fontFamily="Satoshi, system-ui, sans-serif">sahamath</text>
+      <rect x="296" y="72" width="44" height="16" rx="8" fill="#3a3e3b" stroke="#5c615d" strokeWidth="1" />
+      <circle cx="366" cy="80" r="5" fill="#45c07f" />
+      <rect x="38" y="104" width="344" height="9" rx="4.5" fill="#101211" />
+    </svg>
   );
 }
 
-/* ---------- HeroMockup — 3D isometric finance illustration ---------- */
-function HeroMockup() {
-  const [tick, setTick] = useStateL(0);
-  const [glow, setGlow] = useStateL({ x: 50, y: 50, on: false });
-
-  useEffectL(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 1600);
-    return () => clearInterval(id);
-  }, []);
-
-  const bars = useMemoL(() =>
-    [0.55, 0.42, 0.78, 0.62, 0.95, 0.85].map((b, i) =>
-      Math.min(1, b + Math.sin((tick + i) * 0.8) * 0.06)
-    ), [tick]);
+function Hero({ onNavigate }) {
+  const [f, setF] = useStateL({ kode: 'BBCA', lot: 10, beli: 5125, jual: 5534 });
+  const setNum = (k) => (e) => setF({ ...f, [k]: Number(e.target.value.replace(/\D/g, '')) || 0 });
+  const shares = f.lot * 100;
+  const buyGross = shares * f.beli;
+  const buyFee = Math.round(buyGross * HERO_FEE_BUY);
+  const modal = buyGross + buyFee;
+  const sellGross = shares * f.jual;
+  const sellFee = Math.round(sellGross * HERO_FEE_SELL);
+  const terima = sellGross - sellFee;
+  const net = terima - modal;
+  const pct = modal ? (net / modal) * 100 : 0;
+  const rp = (v) => Math.round(v).toLocaleString('id-ID');
+  const color = net >= 0 ? NOTA_UP : NOTA_DOWN;
+  const fields = [
+    { id: 'h-kode', label: 'Kode saham', value: f.kode, mode: 'text',
+      onChange: (e) => setF({ ...f, kode: e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4) }) },
+    { id: 'h-lot', label: 'Jumlah lot', value: f.lot, mode: 'numeric', onChange: setNum('lot') },
+    { id: 'h-beli', label: 'Harga beli', value: f.beli, mode: 'numeric', onChange: setNum('beli') },
+    { id: 'h-jual', label: 'Harga jual', value: f.jual, mode: 'numeric', onChange: setNum('jual') },
+  ];
+  const input = {
+    width: '100%', minHeight: 48, boxSizing: 'border-box', padding: '0 12px', border: '1px solid var(--border-strong)',
+    borderRadius: 6, background: 'var(--surface)', color: 'var(--fg)', fontFamily: 'JetBrains Mono, monospace', fontSize: 16,
+  };
 
   return (
-    <div
-      className="fade-up fade-up-2 hero-3d"
-      style={{
-        position: 'relative', height: 560,
-        marginTop: 60,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        perspective: 1400,
-        transition: 'transform 0.35s cubic-bezier(0.23, 1, 0.32, 1)',
-        willChange: 'transform',
-        cursor: 'default',
-      }}
-      onMouseMove={(e) => {
-        const r = e.currentTarget.getBoundingClientRect();
-        const nx = (e.clientX - r.left) / r.width;
-        const ny = (e.clientY - r.top) / r.height;
-        const rx = (nx - 0.5) * 12;
-        const ry = (ny - 0.5) * 8;
-        e.currentTarget.style.transform = `rotateY(${rx.toFixed(2)}deg) rotateX(${(-ry).toFixed(2)}deg)`;
-        setGlow({ x: nx * 100, y: ny * 100, on: true });
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = '';
-        setGlow((g) => ({ ...g, on: false }));
-      }}
-    >
-      {/* glow backdrop */}
-      <div className="hero-glow" style={{
-        position: 'absolute', inset: 0,
-        background: 'radial-gradient(circle at 50% 55%, var(--primary-soft) 0%, transparent 65%)',
-        filter: 'blur(20px)',
-        opacity: 0.9,
-        transition: 'opacity 0.35s',
-      }} />
+    <section style={{ padding: '48px 0 80px' }}>
+      <div className="container" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: '48px 64px' }}>
+        <div style={{ flex: '1 1 440px', minWidth: 0, paddingTop: 24 }}>
+          <h1 style={{ fontSize: 'clamp(44px, 6vw, 76px)', lineHeight: 0.98, letterSpacing: '-0.045em', margin: 0 }}>
+            Cuan-mu, terukur. Tanpa drama.
+          </h1>
+          <p style={{ margin: '24px 0 0', maxWidth: '44ch', fontSize: 19, lineHeight: 1.55, color: 'var(--fg-muted)' }}>
+            Kalkulator saham IDX buat cek untung bersih, batas ARA dan ARB, dan risiko sebelum beli. Gratis, tanpa iklan.
+          </p>
+          <form onSubmit={(e) => e.preventDefault()} style={{ marginTop: 32, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14, maxWidth: 460 }}>
+            {fields.map((x) => (
+              <div key={x.id} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label htmlFor={x.id} style={{ fontSize: 14, fontWeight: 600 }}>{x.label}</label>
+                <input id={x.id} value={x.value} onChange={x.onChange} inputMode={x.mode} style={input} />
+              </div>
+            ))}
+          </form>
+          <p style={{ margin: '12px 0 0', fontSize: 14, color: 'var(--fg-muted)' }}>
+            Fee broker 0,15% beli dan 0,25% jual.{' '}
+            <button type="button" onClick={() => onNavigate('profit')} style={{ font: 'inherit', color: 'var(--fg)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+              Ganti fee di kalkulator profit
+            </button>
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 28 }}>
+            <button className="btn btn-primary" onClick={() => onNavigate('analyzer')}>Analisa saham</button>
+            <button className="btn btn-secondary" onClick={() => onNavigate('araarb')}>Cek ARA dan ARB</button>
+          </div>
+        </div>
 
-      {/* cursor spotlight */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        pointerEvents: 'none',
-        overflow: 'hidden',
-        borderRadius: 28,
-        opacity: glow.on ? 1 : 0,
-        transition: 'opacity 0.3s',
-      }}>
-        <div style={{
-          position: 'absolute',
-          left: `${glow.x}%`,
-          top: `${glow.y}%`,
-          width: 260,
-          height: 260,
-          transform: 'translate(-50%, -50%)',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(0,168,107,0.22) 0%, rgba(0,168,107,0.06) 45%, transparent 70%)',
-          filter: 'blur(4px)',
-        }} />
-      </div>
-
-      {/* main isometric scene */}
-      <div style={{
-        position: 'relative', width: 480, height: 480,
-        transformStyle: 'preserve-3d',
-        transform: 'rotateX(55deg) rotateZ(-35deg)',
-        animation: 'hero3dFloat 6s ease-in-out infinite',
-      }}>
-
-        {/* base platform — shadow layer */}
-        <div style={{
-          position: 'absolute', left: 70, top: 70, width: 340, height: 340,
-          borderRadius: 28,
-          background: 'linear-gradient(135deg, color-mix(in oklab, var(--primary) 18%, var(--bg)) 0%, var(--bg-soft) 100%)',
-          border: '1px solid var(--border)',
-          boxShadow: '0 30px 60px -20px color-mix(in oklab, var(--primary) 35%, transparent)',
-          transform: 'translateZ(-30px)',
-        }} />
-
-        {/* base platform — surface */}
-        <div style={{
-          position: 'absolute', left: 70, top: 70, width: 340, height: 340,
-          borderRadius: 28,
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          transform: 'translateZ(0px)',
-          boxShadow: 'inset 0 0 0 1px color-mix(in oklab, var(--primary) 12%, transparent)',
-        }} />
-
-        {/* grid lines */}
-        <svg viewBox="0 0 340 340" style={{
-          position: 'absolute', left: 70, top: 70, width: 340, height: 340,
-          transform: 'translateZ(1px)',
-        }}>
-          {[60, 120, 180, 240, 280].map((y, i) => (
-            <line key={i} x1="30" y1={y} x2="310" y2={y}
-              stroke="var(--border)" strokeWidth="1" strokeDasharray="3 6" opacity="0.7" />
-          ))}
-        </svg>
-
-        {/* rising bar chart */}
-        {bars.map((h, i) => {
-          const barH = 30 + h * 170;
-          return (
-            <div key={i} style={{
-              position: 'absolute',
-              left: 110 + i * 36, top: 220,
-              width: 28, height: 28,
-              transformStyle: 'preserve-3d',
-              transform: `translateZ(${barH}px)`,
-              transition: 'transform 0.8s ease-out',
-            }}>
-              <div style={{
-                position: 'absolute', inset: 0,
-                background: `linear-gradient(135deg, color-mix(in oklab, var(--primary) ${50 + i * 8}%, white) 0%, var(--primary) 100%)`,
-                borderRadius: 4,
-                boxShadow: '0 0 0 1px color-mix(in oklab, var(--primary) 60%, black)',
-              }} />
-              <div style={{
-                position: 'absolute', left: 0, top: 28,
-                width: 28, height: barH,
-                background: 'linear-gradient(to bottom, color-mix(in oklab, var(--primary) 80%, black), color-mix(in oklab, var(--primary) 50%, black))',
-                transform: 'rotateX(-90deg)', transformOrigin: 'top',
-              }} />
+        <div style={{ flex: '0 1 420px', minWidth: 300, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <HeroPrinter />
+          <div style={{ width: 340, maxWidth: '100%', marginTop: -24, overflow: 'hidden', paddingBottom: 28, position: 'relative', zIndex: 1 }}>
+            <div className="hero-cetak" style={{ filter: 'drop-shadow(0 12px 18px rgba(25, 27, 26, 0.16))' }}>
+              <div role="region" aria-label="Nota profit" aria-live="polite" className="mono tnum" style={{ background: '#fcfcfa', color: NOTA_INK, padding: '32px 22px 18px', fontSize: 13, lineHeight: 1.8 }}>
+                <div style={{ textAlign: 'center' }}>Nota profit</div>
+                <NotaCut />
+                <div>{f.kode || 'Saham'}, {rp(f.lot)} lot ({rp(shares)} lembar)</div>
+                <NotaRow k={`Beli @ ${rp(f.beli)}`} v={rp(buyGross)} />
+                <NotaRow k="Fee beli 0,15%" v={rp(buyFee)} />
+                <NotaRow k="Modal keluar" v={rp(modal)} />
+                <NotaCut />
+                <NotaRow k={`Jual @ ${rp(f.jual)}`} v={rp(sellGross)} />
+                <NotaRow k="Fee jual 0,25%" v={rp(sellFee)} />
+                <NotaRow k="Uang diterima" v={rp(terima)} />
+                <NotaCut />
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 16, fontWeight: 700, color }}>
+                  <span>{net >= 0 ? 'Untung bersih' : 'Rugi bersih'}</span><span>{rp(Math.abs(net))}</span>
+                </div>
+                <div style={{ textAlign: 'right', color }}>
+                  {(net >= 0 ? '+' : '−') + Math.abs(pct).toFixed(2).replace('.', ',')}% dari modal
+                </div>
+                <NotaCut />
+                <p style={{ margin: 0, textAlign: 'center' }}>Saham yang sudah dibeli<br />tidak dapat dikembalikan.</p>
+              </div>
+              <NotaEdge bottom />
             </div>
-          );
-        })}
-
-        {/* rupiah coin stack */}
-        {[0, 1, 2, 3, 4].map((i) => (
-          <div key={i} style={{
-            position: 'absolute', left: 110, top: 290,
-            width: 84, height: 84, borderRadius: '50%',
-            background: i === 4
-              ? 'radial-gradient(circle at 30% 30%, #fde68a 0%, #f59e0b 60%, #b45309 100%)'
-              : 'linear-gradient(135deg, #fcd34d 0%, #f59e0b 60%, #b45309 100%)',
-            border: '2px solid #92400e',
-            transform: `translateZ(${20 + i * 18}px)`,
-            boxShadow: '0 0 0 1px rgba(0,0,0,0.15)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'Satoshi, sans-serif', fontWeight: 900,
-            fontSize: i === 4 ? 30 : 0, color: '#92400e', letterSpacing: '-0.04em',
-          }}>{i === 4 && 'Rp'}</div>
-        ))}
-
-        {/* shimmer sweep on platform surface */}
-        <div style={{
-          position: 'absolute', left: 70, top: 70, width: 340, height: 340,
-          borderRadius: 28,
-          transform: 'translateZ(2px)',
-          overflow: 'hidden',
-          pointerEvents: 'none',
-        }}>
-          <div className="hero-shimmer" />
-        </div>
-
-        {/* floating particles from coin area */}
-        {[
-          { left: 142, delay: 0,    dur: 2.8 },
-          { left: 158, delay: 0.9,  dur: 3.2 },
-          { left: 133, delay: 1.7,  dur: 2.5 },
-          { left: 170, delay: 2.4,  dur: 3.6 },
-          { left: 148, delay: 0.4,  dur: 2.9 },
-        ].map((p, i) => (
-          <div key={i} className="hero-particle" style={{
-            position: 'absolute',
-            left: p.left, top: 295,
-            width: 6, height: 6,
-            borderRadius: '50%',
-            background: 'var(--primary)',
-            transform: 'translateZ(120px)',
-            animationDelay: `${p.delay}s`,
-            animationDuration: `${p.dur}s`,
-          }} />
-        ))}
-
-        {/* green upward arrow */}
-        <svg viewBox="0 0 120 200" style={{
-          position: 'absolute', left: 290, top: 110,
-          width: 120, height: 200,
-          transform: 'translateZ(180px) rotateZ(35deg) rotateX(-55deg)',
-        }}>
-          <defs>
-            <linearGradient id="arrowGrad" x1="0" y1="100%" x2="0" y2="0%">
-              <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="var(--primary)" />
-            </linearGradient>
-          </defs>
-          <path d="M 50 190 Q 50 100, 90 60 L 60 60 L 95 25 L 115 60 L 90 60"
-            fill="none" stroke="url(#arrowGrad)" strokeWidth="14" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M 90 60 L 60 60 L 95 25 L 115 60 Z" fill="var(--primary)" />
-        </svg>
-
-        {/* floating coin — right back */}
-        <div style={{
-          position: 'absolute', left: 340, top: 110,
-          width: 56, height: 56, borderRadius: '50%',
-          background: 'radial-gradient(circle at 30% 30%, #fde68a 0%, #f59e0b 60%, #b45309 100%)',
-          border: '2px solid #92400e',
-          transform: 'translateZ(160px) rotateX(-55deg) rotateZ(35deg)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'Satoshi, sans-serif', fontWeight: 900, fontSize: 22, color: '#92400e',
-          animation: 'coinFloat 4s ease-in-out infinite',
-        }}>Rp</div>
-
-        {/* P/L floating card */}
-        <div style={{
-          position: 'absolute', left: 200, top: 90,
-          width: 180, height: 110,
-          transform: 'translateZ(260px) rotateX(-55deg) rotateZ(35deg)',
-          background: 'var(--surface)',
-          borderRadius: 14,
-          border: '1px solid var(--border)',
-          boxShadow: '0 20px 40px -10px rgba(0,0,0,0.18)',
-          padding: 12,
-          display: 'flex', flexDirection: 'column', gap: 6,
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', color: 'var(--fg-muted)' }}>P/L HARI INI</span>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--success)' }} />
           </div>
-          <div className="mono tnum" style={{ fontSize: 22, fontWeight: 900, color: 'var(--success)', letterSpacing: '-0.02em', lineHeight: 1 }}>
-            +Rp 2.4 jt
-          </div>
-          <svg viewBox="0 0 160 30" style={{ width: '100%', height: 30 }} preserveAspectRatio="none">
-            <path d="M 0 22 L 20 18 L 40 20 L 60 14 L 80 16 L 100 10 L 120 12 L 140 6 L 160 4"
-              fill="none" stroke="var(--primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
         </div>
       </div>
-
       <style>{`
-        .hero-3d:hover .hero-glow { opacity: 1.0 !important; filter: blur(14px) !important; }
-
-        /* Shimmer sweep */
-        .hero-shimmer {
-          position: absolute; inset: 0;
-          background: linear-gradient(
-            115deg,
-            transparent 0%, transparent 40%,
-            rgba(255,255,255,0.18) 50%,
-            transparent 60%, transparent 100%
-          );
-          background-size: 200% 100%;
-          animation: heroShimmer 4s ease-in-out infinite;
-        }
-        @keyframes heroShimmer {
-          0%   { background-position: 200% center; }
-          100% { background-position: -200% center; }
-        }
-
-        /* Floating particles */
-        .hero-particle {
-          animation: heroParticle linear infinite;
-          opacity: 0;
-        }
-        @keyframes heroParticle {
-          0%   { transform: translateZ(120px) translateY(0px);   opacity: 0; }
-          10%  { opacity: 0.7; }
-          80%  { opacity: 0.15; }
-          100% { transform: translateZ(120px) translateY(-90px); opacity: 0; }
-        }
-
-        @keyframes hero3dFloat {
-          0%, 100% { transform: rotateX(55deg) rotateZ(-35deg) translateY(0px); }
-          50%       { transform: rotateX(55deg) rotateZ(-35deg) translateY(-12px); }
-        }
-        @keyframes coinFloat {
-          0%, 100% { transform: translateZ(160px) rotateX(-55deg) rotateZ(35deg) translateY(0px); }
-          50%       { transform: translateZ(160px) rotateX(-55deg) rotateZ(35deg) translateY(-14px); }
-        }
-        .hero-3d::before {
-          content: '';
-          position: absolute;
-          left: 50%; top: 55%;
-          width: 360px; height: 60px;
-          background: radial-gradient(ellipse at center, rgba(0,0,0,0.18) 0%, transparent 70%);
-          transform: translate(-50%, 50%);
-          filter: blur(8px);
-          z-index: 0;
-        }
+        @keyframes hero-cetak { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+        .hero-cetak { animation: hero-cetak 1.6s steps(16) 0.3s both; }
+        @media (prefers-reduced-motion: reduce) { .hero-cetak { animation: none; } }
       `}</style>
-    </div>
+    </section>
   );
 }
 
@@ -1117,123 +834,38 @@ function MarketCalendarWidget() {
   );
 }
 
-/* ---------- Tools grid (6 calculators) ---------- */
+/* ---------- Yang bisa dicek: pertanyaan pengguna → alat, ikon isometrik ---------- */
 const TOOLS = [
-  { id: 'analyzer', icon: 'chart',  title: 'Stock Analyzer',         tag: 'TEKNIKAL + AI', desc: 'Chart, fundamental, katalis AI, plus trading plan ATR dan kisaran harga 5 hari.' },
-  { id: 'average',  icon: 'calc',   title: 'Average Price',          tag: 'PALING DIPAKAI',    desc: 'Hitung harga rata-rata setelah average down. Tau harga break-even-mu dalam sekejap.' },
-  { id: 'araarb',   icon: 'arrows', title: 'ARA & ARB',              tag: 'AUTO-REJECT',       desc: 'Cek batas atas & bawah harga harian sesuai aturan IDX terbaru. Tier-1, Tier-2, Tier-3 auto.' },
-  { id: 'profit',   icon: 'wallet', title: 'Profit Calc',            tag: 'NET P/L',           desc: 'Estimasi profit bersih setelah fee broker, levy, dan PPh. Plus breakeven price.' },
-  { id: 'amunisi',  icon: 'shield', title: 'Amunisi (Position Size)', tag: 'RISK MGMT',         desc: 'Tentuin lot maksimal yang aman buat di-snipe, biar gak overbet & rekening selamat.' },
-  { id: 'dividen',  icon: 'coin',   title: 'Dividen Yield',          tag: 'PASSIVE',           desc: 'Hitung yield bersih setelah PPh 10%. Buat pemburu cuan tahunan tanpa pegang ribet.' },
+  { id: 'profit',   q: 'Untung bersihku berapa setelah fee?',                     cta: 'Hitung profit' },
+  { id: 'araarb',   q: 'Besok paling tinggi dan paling rendah di harga berapa?',  cta: 'Cek ARA dan ARB' },
+  { id: 'average',  q: 'Harga rata-rataku jadi berapa kalau nambah lot?',          cta: 'Hitung average' },
+  { id: 'amunisi',  q: 'Boleh beli berapa lot kalau rugi maksimal Rp500 ribu?',   cta: 'Hitung lot aman' },
+  { id: 'dividen',  q: 'Dividen siapa yang bisa diambil bulan ini?',               cta: 'Lihat jadwal dividen' },
+  { id: 'analyzer', q: 'Seberapa jauh harga bisa bergerak minggu ini?',            cta: 'Buka analyzer' },
+  { id: 'heatmap',  q: 'Sektor mana yang sedang panas hari ini?',                  cta: 'Buka heatmap' },
+  { id: 'arena',    q: 'Mau latihan antre beli tanpa uang asli?',                  cta: 'Main di arena' },
 ];
 
 function ToolsGrid({ onNavigate }) {
   return (
-    <section style={{ padding: '80px 0' }}>
+    <section style={{ padding: '72px 0' }}>
       <div className="container">
-        <div style={{ marginBottom: 48, maxWidth: 720 }}>
-          <div className="badge" style={{ marginBottom: 16 }}>
-            <Icon name="zap" size={12} />
-            <span>6 TOOLS</span>
-          </div>
-          <h2
-            style={{
-              fontSize: 'clamp(32px, 4vw, 48px)',
-              marginBottom: 12,
-              letterSpacing: '-0.03em',
-            }}
-          >
-            Semua tools yang lo butuhin,<br />
-            <span style={{ color: 'var(--primary)' }}>di satu tempat.</span>
-          </h2>
-          <p style={{ fontSize: 17, color: 'var(--fg-muted)', lineHeight: 1.55 }}>
-            Tinggal klik, isi, dapet jawaban. Gak perlu Excel ribet, gak perlu install apa-apa.
-          </p>
-        </div>
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: 16,
-          }}
-        >
-          {TOOLS.map((t, i) => (
-            <button
-              key={t.id}
-              onClick={() => onNavigate(t.id)}
-              className={`card interactive fade-up fade-up-${(i % 4) + 1}`}
-              style={{
-                padding: 24,
-                textAlign: 'left',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 16,
-                cursor: 'pointer',
-              }}
-            >
-              <div
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
-              >
-                <div
-                  style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 'var(--radius)',
-                    background: 'var(--primary-soft)',
-                    color: 'var(--primary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Icon name={t.icon} size={24} />
-                </div>
-                <span
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 800,
-                    color: 'var(--primary)',
-                    letterSpacing: '0.08em',
-                    padding: '4px 8px',
-                    borderRadius: 6,
-                    background: 'var(--primary-soft)',
-                  }}
-                >
-                  {t.tag}
+        <h2 style={{ margin: 0, paddingTop: 24, borderTop: '2px solid var(--fg)', fontSize: 'clamp(28px, 3.5vw, 40px)', letterSpacing: '-0.03em' }}>
+          Yang bisa kamu cek di sini
+        </h2>
+        <ul style={{ listStyle: 'none', margin: '8px 0 0', padding: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 440px), 1fr))', columnGap: 48 }}>
+          {TOOLS.map((t) => (
+            <li key={t.id} style={{ borderBottom: '1px solid var(--border)' }}>
+              <button type="button" onClick={() => onNavigate(t.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 18, padding: '14px 0', textAlign: 'left', font: 'inherit', color: 'var(--fg)', cursor: 'pointer' }}>
+                <IsoIcon name={t.id} size={76} />
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'block', fontSize: 19, lineHeight: 1.3 }}>{t.q}</span>
+                  <span style={{ display: 'block', marginTop: 4, fontSize: 15, fontWeight: 700, textDecoration: 'underline', textUnderlineOffset: 3 }}>{t.cta}</span>
                 </span>
-              </div>
-              <div>
-                <h3 style={{ fontSize: 22, marginBottom: 6, letterSpacing: '-0.025em' }}>
-                  {t.title}
-                </h3>
-                <p
-                  style={{
-                    fontSize: 14,
-                    color: 'var(--fg-muted)',
-                    lineHeight: 1.55,
-                    margin: 0,
-                  }}
-                >
-                  {t.desc}
-                </p>
-              </div>
-              <div
-                style={{
-                  marginTop: 'auto',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: 'var(--primary)',
-                }}
-              >
-                Buka kalkulator <Icon name="arrow_right" size={14} />
-              </div>
-            </button>
+              </button>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );

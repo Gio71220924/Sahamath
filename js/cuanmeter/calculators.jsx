@@ -1254,7 +1254,123 @@ function Dividen() {
           </div>
         </div>
       </div>
+      <DividendCalendar onPick={(p, d) => { setPrice(p); setDps(d); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
     </CalcScreen>
+  );
+}
+
+/* ---------- Dividen 30 hari ke depan + kandidat capture ----------
+   Riset train_anomalies.py (287 event yield >= 3%, 2022-2026): beli di close cum date,
+   jual di close ex date, dividen tetap dibayar. Rata-rata +0,76%/event setelah pajak 10%
+   dan fee 0,25%, positif 63% event, positif tiap tahun. Harga turun ~0,77x dividen di ex date. */
+const CAPTURE_MIN_YIELD = 3;
+
+function parseDps(e) {
+  const m = /Rp\s*([\d.,]+)/.exec(e.detail || '') || /Div\s+([\d.,]+)/.exec(e.summary || '');
+  if (!m) return null;
+  const v = parseFloat(m[1].replace(/\./g, '').replace(',', '.'));
+  return Number.isFinite(v) && v > 0 ? v : null;
+}
+
+function DividendCalendar({ onPick }) {
+  const [rows, setRows] = useStateC(null);
+  const [error, setError] = useStateC(null);
+
+  useEffectC(() => {
+    let alive = true;
+    fetch('/calendar?range=upcoming&type=corporate')
+      .then((r) => r.json())
+      .then(async (cal) => {
+        const events = (cal.events || [])
+          .filter((e) => e.label === 'Dividen' && e.eventType === 'cum' && /^[A-Z]{4}$/.test(e.ticker || ''))
+          .map((e) => ({ ticker: e.ticker, name: e.securityName, cum: e.date, days: e.daysUntil, dps: parseDps(e) }))
+          .filter((e) => e.dps);
+        const tickers = [...new Set(events.map((e) => e.ticker))].slice(0, 50);
+        const q = tickers.length ? await fetch('/watchlist?tickers=' + tickers.join(',')).then((r) => r.json()) : {};
+        const list = events
+          .map((e) => {
+            const price = q.quotes?.[e.ticker]?.price;
+            return { ...e, price, yld: price ? (e.dps / price) * 100 : null };
+          })
+          .sort((a, b) => a.cum.localeCompare(b.cum) || (b.yld || 0) - (a.yld || 0));
+        if (alive) setRows(list);
+      })
+      .catch(() => { if (alive) setError('Jadwal dividen belum bisa dimuat. Coba lagi nanti.'); });
+    return () => { alive = false; };
+  }, []);
+
+  const day = (s) => new Date(s + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+  const num = (v, d = 0) => v.toLocaleString('id-ID', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const th = { padding: '10px 12px 6px', fontWeight: 600, fontSize: 13, color: 'var(--fg-muted)', textAlign: 'right', whiteSpace: 'nowrap' };
+  const td = { padding: 12, textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontSize: 13, color: 'var(--fg)', whiteSpace: 'nowrap' };
+
+  return (
+    <section aria-labelledby="div-cal" style={{ marginTop: 48 }}>
+      <h2 id="div-cal" style={{ margin: 0, fontSize: 28, letterSpacing: '-0.02em' }}>Dividen 30 hari ke depan</h2>
+      <p style={{ margin: '8px 0 0', maxWidth: '72ch', color: 'var(--fg-muted)', fontSize: 15, lineHeight: 1.6 }}>
+        Untuk yield {CAPTURE_MIN_YIELD}% ke atas ada pola yang konsisten: beli di harga penutupan cum date, jual di penutupan
+        hari berikutnya (ex date), dan dividennya tetap dibayar ke kamu. Harga biasanya turun sekitar 0,77 kali dividen,
+        lebih kecil dari dividen bersih setelah pajak. Dari 287 event 2022 sampai 2026, hasilnya rata-rata +0,76% per event
+        setelah pajak 10% dan fee 0,25%. Sebanyak 37% event tetap rugi, jadi ini peluang, bukan jaminan.
+      </p>
+
+      {error && <p role="alert" style={{ marginTop: 16, color: 'var(--danger)' }}>{error}</p>}
+      {!rows && !error && <p style={{ marginTop: 16, color: 'var(--fg-muted)' }}>Memuat jadwal dividen dari KSEI...</p>}
+      {rows && rows.length === 0 && (
+        <p style={{ marginTop: 16, color: 'var(--fg-muted)' }}>Belum ada jadwal dividen tunai dalam 30 hari ke depan.</p>
+      )}
+
+      {rows && rows.length > 0 && (
+        <div style={{ overflowX: 'auto', marginTop: 16 }}>
+          <table style={{ width: '100%', minWidth: 760, borderCollapse: 'collapse' }}>
+            <caption style={{ position: 'absolute', left: -9999 }}>Jadwal dividen tunai 30 hari ke depan dan yield dari harga terakhir</caption>
+            <thead>
+              <tr style={{ borderBottom: '2px solid var(--fg)' }}>
+                <th scope="col" style={{ ...th, textAlign: 'left', paddingLeft: 0 }}>Saham</th>
+                <th scope="col" style={th}>Cum date</th>
+                <th scope="col" style={th}>Dividen/lembar</th>
+                <th scope="col" style={th}>Harga</th>
+                <th scope="col" style={th}>Yield</th>
+                <th scope="col" style={{ ...th, textAlign: 'left' }}>Capture</th>
+                <th scope="col" style={{ ...th, paddingRight: 0 }}><span style={{ position: 'absolute', left: -9999 }}>Aksi</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const candidate = r.yld != null && r.yld >= CAPTURE_MIN_YIELD;
+                return (
+                  <tr key={r.ticker + r.cum} style={{ borderTop: '1px solid var(--border)' }}>
+                    <th scope="row" style={{ textAlign: 'left', padding: '12px 12px 12px 0', fontWeight: 800, color: 'var(--fg)' }}>
+                      {r.ticker}
+                      <div style={{ fontWeight: 400, fontSize: 12, color: 'var(--fg-muted)' }}>{r.name}</div>
+                    </th>
+                    <td style={td}>
+                      {day(r.cum)}
+                      <div style={{ fontFamily: 'inherit', fontSize: 12, color: 'var(--fg-muted)' }}>
+                        {r.days === 0 ? 'hari ini' : r.days === 1 ? 'besok' : `${r.days} hari lagi`}
+                      </div>
+                    </td>
+                    <td style={td}>Rp{num(r.dps, r.dps % 1 ? 2 : 0)}</td>
+                    <td style={td}>{r.price ? num(r.price) : '–'}</td>
+                    <td style={{ ...td, fontWeight: candidate ? 800 : 400 }}>{r.yld != null ? num(r.yld, 1) + '%' : '–'}</td>
+                    <td style={{ ...td, textAlign: 'left', fontFamily: 'inherit', color: candidate ? 'var(--success)' : 'var(--fg-muted)' }}>
+                      {candidate ? 'Kandidat' : r.yld != null ? 'Yield terlalu kecil' : 'Harga belum ada'}
+                    </td>
+                    <td style={{ ...td, paddingRight: 0 }}>
+                      {r.price && (
+                        <button type="button" className="btn btn-secondary" style={{ minHeight: 36, padding: '0 12px', fontSize: 13 }} onClick={() => onPick(r.price, r.dps)}>
+                          Hitung
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 
