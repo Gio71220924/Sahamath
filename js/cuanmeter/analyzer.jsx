@@ -1,11 +1,9 @@
 /* ============================================================
    analyzer.jsx — Stock Analyzer (ATR trading plan + AI).
-   Generates deterministic mock data per ticker so re-search
-   yields the same result. NOT real market data.
    Exposes globals: Analyzer.
    ============================================================ */
 
-const { useState: useStateZ, useMemo: useMemoZ, useRef: useRefZ, useEffect: useEffectZ } = React;
+const { useState: useStateZ, useRef: useRefZ, useEffect: useEffectZ } = React;
 
 
 const POPULAR_TICKERS = ['BBRI', 'BBCA', 'TLKM', 'ASII', 'ANTM', 'BUMI', 'BMRI', 'GOTO', 'ADRO'];
@@ -14,119 +12,6 @@ const SCREENER_TICKERS = [
   'ADRO','AKRA','BUMI','BYAN','DEWA','DSSA',
   'ENRG','GEMS','ITMG','MEDC','PGAS','PTBA','PTRO','RAJA'
 ];
-
-/* deterministic pseudo-random per ticker (LCG seeded by string hash) */
-function seededRand(seed) {
-  let s = 0;
-  for (let i = 0; i < seed.length; i++) s = (s * 31 + seed.charCodeAt(i)) | 0;
-  return () => {
-    s = (s * 1664525 + 1013904223) | 0;
-    return ((s >>> 0) % 10000) / 10000;
-  };
-}
-
-function tickSizeFor(price) {
-  if (price < 200) return 1;
-  if (price < 500) return 2;
-  if (price < 2000) return 5;
-  if (price < 5000) return 10;
-  return 25;
-}
-
-function generateAnalysis(ticker) {
-  const rand = seededRand(ticker.toUpperCase());
-  const basePrice = 500 + Math.floor(rand() * 11000);
-  const tickSize = tickSizeFor(basePrice);
-
-  // 40-period candle history
-  const candles = [];
-  let v = basePrice;
-  for (let i = 0; i < 40; i++) {
-    const open = v;
-    const change = (rand() - 0.45) * basePrice * 0.04;
-    v = Math.max(50, v + change);
-    const high = Math.max(open, v) + rand() * basePrice * 0.015;
-    const low = Math.min(open, v) - rand() * basePrice * 0.015;
-    candles.push({ open, close: v, high, low });
-  }
-  const lastPrice = Math.round(v / tickSize) * tickSize;
-  const prevPrice = Math.round(candles[candles.length - 2].close / tickSize) * tickSize;
-  const chgPct = ((lastPrice - prevPrice) / prevPrice) * 100;
-
-  // AI plan
-  const isBullish = rand() > 0.45;
-  const entry = lastPrice;
-  const tp = Math.round((entry * (1 + (isBullish ? 0.06 : 0.04))) / tickSize) * tickSize;
-  const sl = Math.round((entry * (1 - (isBullish ? 0.025 : 0.04))) / tickSize) * tickSize;
-  const winRate = Math.round(48 + rand() * 22);
-  const signal = isBullish
-    ? rand() > 0.4
-      ? 'BUY'
-      : 'STRONG BUY'
-    : rand() > 0.6
-      ? 'HOLD'
-      : 'SELL';
-  const strength = Math.round(55 + rand() * 35);
-
-  return {
-    ticker,
-    lastPrice,
-    chgPct,
-    candles,
-    plan: { entry, tp, sl, signal, winRate, strength, isBullish },
-  };
-}
-
-/* ---------- Candlestick chart ---------- */
-function CandleChart({ data, height = 360 }) {
-  const w = 1200;
-  const pad = 40;
-  const min = Math.min(...data.map((c) => c.low)) * 0.998;
-  const max = Math.max(...data.map((c) => c.high)) * 1.002;
-  const range = max - min || 1;
-  const cw = (w - pad * 2) / data.length;
-  const y = (v) => pad + (1 - (v - min) / range) * (height - pad * 2);
-
-  return (
-    <svg
-      viewBox={`0 0 ${w} ${height}`}
-      preserveAspectRatio="none"
-      style={{ width: '100%', height, display: 'block' }}
-    >
-      {[0, 0.25, 0.5, 0.75, 1].map((p, i) => (
-        <line
-          key={i}
-          x1={pad}
-          y1={pad + p * (height - pad * 2)}
-          x2={w - pad}
-          y2={pad + p * (height - pad * 2)}
-          stroke="var(--border)"
-          strokeDasharray="2 4"
-          opacity="0.6"
-        />
-      ))}
-      {data.map((c, i) => {
-        const cx = pad + i * cw + cw / 2;
-        const up = c.close >= c.open;
-        const color = up ? 'var(--success)' : 'var(--danger)';
-        const bodyTop = y(Math.max(c.open, c.close));
-        const bodyBot = y(Math.min(c.open, c.close));
-        return (
-          <g key={i}>
-            <line x1={cx} y1={y(c.high)} x2={cx} y2={y(c.low)} stroke={color} strokeWidth="1.2" />
-            <rect
-              x={cx - cw * 0.32}
-              y={bodyTop}
-              width={cw * 0.64}
-              height={Math.max(1, bodyBot - bodyTop)}
-              fill={color}
-            />
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
 
 /* ---------- ML Plan Chart — real candles + entry/TP/SL lines ---------- */
 function MLPlanChart({ candles, plan }) {
@@ -894,7 +779,6 @@ function Analyzer({ initialTicker }) {
       .catch(() => { if (activeAi.current === code) { setAiError('Gagal menghubungi server'); setAiLoading(false); } });
   };
 
-  const data = useMemoZ(() => generateAnalysis(active), [active]);
 
   useEffectZ(() => { fetchTVPrice('BBRI'); fetchFundamentals('BBRI'); fetchAiAnalysis('BBRI'); }, []);
 
@@ -962,7 +846,7 @@ function Analyzer({ initialTicker }) {
       tag="ANALYZER · TEKNIKAL + AI"
       title={
         <>
-          Lacak <span style={{ color: 'var(--primary)' }}>smart money</span>
+          Ukur <span style={{ color: 'var(--primary)' }}>risiko</span>
           <br />
           per saham IDX.
         </>
