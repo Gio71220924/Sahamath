@@ -81,6 +81,12 @@ status = 200
 force = true
 
 [[redirects]]
+from = "/watchlist"
+to = "https://sahamath-production.up.railway.app/watchlist"
+status = 200
+force = true
+
+[[redirects]]
 from = "/*"
 to = "/index.html"
 status = 200

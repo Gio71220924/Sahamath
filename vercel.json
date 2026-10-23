@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "npm run build:static",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/search", "destination": "https://sahamath-production.up.railway.app/search" },
+    { "source": "/price", "destination": "https://sahamath-production.up.railway.app/price" },
+    { "source": "/board", "destination": "https://sahamath-production.up.railway.app/board" },
+    { "source": "/ml-predict", "destination": "https://sahamath-production.up.railway.app/ml-predict" },
+    { "source": "/screener", "destination": "https://sahamath-production.up.railway.app/screener" },
+    { "source": "/calendar", "destination": "https://sahamath-production.up.railway.app/calendar" },
+    { "source": "/ai-analysis", "destination": "https://sahamath-production.up.railway.app/ai-analysis" },
+    { "source": "/ipo-news", "destination": "https://sahamath-production.up.railway.app/ipo-news" },
+    { "source": "/fundamentals", "destination": "https://sahamath-production.up.railway.app/fundamentals" },
+    { "source": "/portfolio", "destination": "https://sahamath-production.up.railway.app/portfolio" },
+    { "source": "/heatmap", "destination": "https://sahamath-production.up.railway.app/heatmap" },
+    { "source": "/watchlist", "destination": "https://sahamath-production.up.railway.app/watchlist" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
