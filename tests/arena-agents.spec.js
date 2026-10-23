@@ -422,6 +422,7 @@ test('submit normalizes object owners before storing snapshots and trade records
     {
       price: 105,
       lot: 1,
+      aggressor: 'buy',
       buyOwner: '[object Object]',
       sellOwner: '[object Object]',
     },
@@ -513,8 +514,8 @@ test('price-time matching still fills oldest order first and reports partial rem
   const result = book.submit({ side: 'buy', price: 105, lot: 8, owner: 'user' });
 
   assert.deepEqual(localize(result.trades), [
-    { price: 105, lot: 5, buyOwner: 'user', sellOwner: 'mm:oldest' },
-    { price: 105, lot: 3, buyOwner: 'user', sellOwner: 'mm:newest' },
+    { price: 105, lot: 5, aggressor: 'buy', buyOwner: 'user', sellOwner: 'mm:oldest' },
+    { price: 105, lot: 3, aggressor: 'buy', buyOwner: 'user', sellOwner: 'mm:newest' },
   ]);
   assert.equal(book.inspectOrder(oldest.restId), null);
   assert.deepEqual(localize(book.inspectOrder(newest.restId)), {
@@ -879,7 +880,8 @@ test('market schedules capped special events and keeps bounded synthetic state',
     sawSpecialOrder ||= syntheticOrders.some((order) => (
       /^(spoof|iceberg|wall|whale):/.test(order.owner)
     ));
-    assert.ok(syntheticOrders.length <= 220);
+    // 26 contiguous levels x ~4 MM orders seeds ~230 orders on gorengan.
+    assert.ok(syntheticOrders.length <= 300);
     assert.ok(market.snapshot().insights.length <= 5);
   }
 
@@ -935,7 +937,8 @@ test('liquid profile stays deeper and seeds tighter than gorengan', () => {
   });
 
   assert.ok(averageDepth(liquid) > averageDepth(gorengan));
-  assert.ok(liquid[0].spread < gorengan[0].spread);
+  // gorengan spreadTicks [1, 3] can also seed a 1-tick spread, so only "not wider".
+  assert.ok(liquid[0].spread <= gorengan[0].spread);
 });
 
 test('Arena store persists normalized market preferences across account reset', () => {
@@ -990,12 +993,12 @@ test('market profiles control initial depth and unknown profiles fall back to no
     rng: runtime.createArenaRng(1),
   });
 
-  assert.equal(liquid.book.depth(20).bids.length, 12);
-  assert.equal(liquid.book.depth(20).asks.length, 12);
-  assert.equal(gorengan.book.depth(20).bids.length, 8);
-  assert.equal(gorengan.book.depth(20).asks.length, 8);
-  assert.equal(fallback.book.depth(20).bids.length, 10);
-  assert.equal(fallback.book.depth(20).asks.length, 10);
+  // All profiles seed 26 contiguous levels; the bid side is clipped at ARB (119 for 140).
+  for (const market of [liquid, gorengan, fallback]) {
+    const depth = market.book.depth(40);
+    assert.equal(depth.asks.length, 26);
+    assert.equal(depth.bids.at(-1).price, market.snapshot().stats.arb);
+  }
 });
 
 test('seed option makes markets deterministic when rng is omitted', () => {
@@ -1106,6 +1109,8 @@ test('market snapshot preserves the Arena contract and adds regime and insights'
     'bestBid',
     'depth',
     'done',
+    'doneBuy',
+    'doneSell',
     'insights',
     'last',
     'lastEvent',
@@ -1136,8 +1141,8 @@ test('market snapshot preserves the Arena contract and adds regime and insights'
     tradeCount: 0,
     simTime: 0,
   });
-  assert.equal(snapshot.depth.bids.length, 10);
-  assert.equal(snapshot.depth.asks.length, 10);
+  assert.equal(snapshot.depth.bids.length, 21); // 139..119, clipped at ARB
+  assert.equal(snapshot.depth.asks.length, 26);
 });
 
 test('snapshot copies done, insights, regime, and initial insight input', () => {
@@ -1372,7 +1377,7 @@ test('user order API keeps resting, cancellation, and fill callbacks compatible'
     rng: runtime.createArenaRng(5),
     onTrade: (trade) => callbacks.push(localize(trade)),
   });
-  const bestBid = market.book.bestBid();
+  const bestAsk = market.book.bestAsk();
   const fill = market.submitUser({ side: 'sell', price: null, lot: 2 });
 
   assert.ok(fill.trades.length > 0);
@@ -1382,8 +1387,8 @@ test('user order API keeps resting, cancellation, and fill callbacks compatible'
   assert.ok(callbacks.every((trade) => trade.sellOwner === 'user'));
 
   const resting = market.submitUser({
-    side: 'buy',
-    price: bestBid - (20 * market.tick),
+    side: 'sell',
+    price: bestAsk + (30 * market.tick),
     lot: 3,
   });
   assert.equal(resting.trades.length, 0);
@@ -1391,8 +1396,8 @@ test('user order API keeps resting, cancellation, and fill callbacks compatible'
   assert.ok(resting.restId);
   assert.deepEqual(localize(market.userOrders()), [{
     id: resting.restId,
-    side: 'buy',
-    price: bestBid - (20 * market.tick),
+    side: 'sell',
+    price: bestAsk + (30 * market.tick),
     lot: 3,
     aheadLot: 0,
   }]);

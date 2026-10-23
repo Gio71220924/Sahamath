@@ -27,7 +27,7 @@ const EXPECTED_PROFILES = {
   liquid: {
     id: 'liquid',
     label: 'Likuid',
-    depthLevels: 12,
+    depthLevels: 26,
     spreadTicks: [1, 1],
     baseLotMin: 45,
     baseLotMax: 160,
@@ -42,8 +42,8 @@ const EXPECTED_PROFILES = {
   normal: {
     id: 'normal',
     label: 'Normal',
-    depthLevels: 10,
-    spreadTicks: [1, 2],
+    depthLevels: 26,
+    spreadTicks: [1, 1],
     baseLotMin: 20,
     baseLotMax: 100,
     depthLotMin: 1_000,
@@ -57,8 +57,8 @@ const EXPECTED_PROFILES = {
   gorengan: {
     id: 'gorengan',
     label: 'Gorengan',
-    depthLevels: 8,
-    spreadTicks: [1, 4],
+    depthLevels: 26,
+    spreadTicks: [1, 3],
     baseLotMin: 5,
     baseLotMax: 55,
     depthLotMin: 100,
@@ -72,8 +72,8 @@ const EXPECTED_PROFILES = {
   trending: {
     id: 'trending',
     label: 'Trending',
-    depthLevels: 10,
-    spreadTicks: [1, 3],
+    depthLevels: 26,
+    spreadTicks: [1, 2],
     baseLotMin: 15,
     baseLotMax: 90,
     depthLotMin: 3_000,
@@ -99,7 +99,7 @@ test('market profiles keep the required order, values, and valid parameters', ()
     assert.deepEqual(profile, expected);
     assert.equal(Object.isFrozen(profile), true);
     assert.equal(Object.isFrozen(profile.spreadTicks), true);
-    assert.ok(profile.depthLevels >= 8 && profile.depthLevels <= 12);
+    assert.ok(profile.depthLevels >= 8 && profile.depthLevels <= 26);
     assert.equal(profile.spreadTicks.length, 2);
     assert.ok(profile.baseLotMin > 0);
     assert.ok(profile.baseLotMax >= profile.baseLotMin);
