@@ -31,7 +31,10 @@ def fetch(tickers):
             prev = float(closes.iloc[-2])
             pct = (last / prev - 1) * 100 if prev > 0 else 0.0
             spark = [round(float(x), 2) for x in closes.iloc[-7:].tolist()]
-            out[t] = {'price': round(last, 2), 'pct': round(pct, 2), 'spark': spark}
+            # rata-rata nilai transaksi harian (Rp), dipakai syarat likuid kandidat capture dividen
+            value = (sub['Close'] * sub['Volume']).dropna().tail(20).mean()
+            out[t] = {'price': round(last, 2), 'pct': round(pct, 2), 'spark': spark,
+                      'value': round(float(value)) if pd.notna(value) else None}
         except Exception:
             pass
     return out

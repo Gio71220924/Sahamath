@@ -1264,6 +1264,8 @@ function Dividen() {
    jual di close ex date, dividen tetap dibayar. Rata-rata +0,76%/event setelah pajak 10%
    dan fee 0,25%, positif 63% event, positif tiap tahun. Harga turun ~0,77x dividen di ex date. */
 const CAPTURE_MIN_YIELD = 3;
+const CAPTURE_MIN_VALUE = 5e9;   // universe riset: transaksi rata-rata >= Rp5 miliar/hari
+const CAPTURE_MIN_PRICE = 100;
 
 function parseDps(e) {
   const m = /Rp\s*([\d.,]+)/.exec(e.detail || '') || /Div\s+([\d.,]+)/.exec(e.summary || '');
@@ -1285,12 +1287,15 @@ function DividendCalendar({ onPick }) {
           .filter((e) => e.label === 'Dividen' && e.eventType === 'cum' && /^[A-Z]{4}$/.test(e.ticker || ''))
           .map((e) => ({ ticker: e.ticker, name: e.securityName, cum: e.date, days: e.daysUntil, dps: parseDps(e) }))
           .filter((e) => e.dps);
+        // server baru nyala: cache KSEI masih dimuat → jangan bilang "tidak ada jadwal"
+        if (!events.length && cal.error) { if (alive) setError(cal.error); return; }
         const tickers = [...new Set(events.map((e) => e.ticker))].slice(0, 50);
         const q = tickers.length ? await fetch('/watchlist?tickers=' + tickers.join(',')).then((r) => r.json()) : {};
         const list = events
           .map((e) => {
-            const price = q.quotes?.[e.ticker]?.price;
-            return { ...e, price, yld: price ? (e.dps / price) * 100 : null };
+            const quote = q.quotes?.[e.ticker] || {};
+            const price = quote.price;
+            return { ...e, price, value: quote.value, yld: price ? (e.dps / price) * 100 : null };
           })
           .sort((a, b) => a.cum.localeCompare(b.cum) || (b.yld || 0) - (a.yld || 0));
         if (alive) setRows(list);
@@ -1308,7 +1313,8 @@ function DividendCalendar({ onPick }) {
     <section aria-labelledby="div-cal" style={{ marginTop: 48 }}>
       <h2 id="div-cal" style={{ margin: 0, fontSize: 28, letterSpacing: '-0.02em' }}>Dividen 30 hari ke depan</h2>
       <p style={{ margin: '8px 0 0', maxWidth: '72ch', color: 'var(--fg-muted)', fontSize: 15, lineHeight: 1.6 }}>
-        Untuk yield {CAPTURE_MIN_YIELD}% ke atas ada pola yang konsisten: beli di harga penutupan cum date, jual di penutupan
+        Untuk saham likuid (transaksi rata-rata Rp5 miliar per hari ke atas) dengan yield {CAPTURE_MIN_YIELD}% ke atas ada pola
+        yang konsisten: beli di harga penutupan cum date, jual di penutupan
         hari berikutnya (ex date), dan dividennya tetap dibayar ke kamu. Harga biasanya turun sekitar 0,77 kali dividen,
         lebih kecil dari dividen bersih setelah pajak. Dari 287 event 2022 sampai 2026, hasilnya rata-rata +0,76% per event
         setelah pajak 10% dan fee 0,25%. Sebanyak 37% event tetap rugi, jadi ini peluang, bukan jaminan.
@@ -1337,7 +1343,10 @@ function DividendCalendar({ onPick }) {
             </thead>
             <tbody>
               {rows.map((r) => {
-                const candidate = r.yld != null && r.yld >= CAPTURE_MIN_YIELD;
+                const highYield = r.yld != null && r.yld >= CAPTURE_MIN_YIELD;
+                const liquid = (r.value || 0) >= CAPTURE_MIN_VALUE && r.price >= CAPTURE_MIN_PRICE;
+                const candidate = highYield && liquid;
+                const status = r.yld == null ? 'Harga belum ada' : !highYield ? 'Yield terlalu kecil' : !liquid ? 'Kurang likuid' : 'Kandidat';
                 return (
                   <tr key={r.ticker + r.cum} style={{ borderTop: '1px solid var(--border)' }}>
                     <th scope="row" style={{ textAlign: 'left', padding: '12px 12px 12px 0', fontWeight: 800, color: 'var(--fg)' }}>
@@ -1354,7 +1363,7 @@ function DividendCalendar({ onPick }) {
                     <td style={td}>{r.price ? num(r.price) : '–'}</td>
                     <td style={{ ...td, fontWeight: candidate ? 800 : 400 }}>{r.yld != null ? num(r.yld, 1) + '%' : '–'}</td>
                     <td style={{ ...td, textAlign: 'left', fontFamily: 'inherit', color: candidate ? 'var(--success)' : 'var(--fg-muted)' }}>
-                      {candidate ? 'Kandidat' : r.yld != null ? 'Yield terlalu kecil' : 'Harga belum ada'}
+                      {status}
                     </td>
                     <td style={{ ...td, paddingRight: 0 }}>
                       {r.price && (

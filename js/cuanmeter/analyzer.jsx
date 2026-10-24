@@ -360,7 +360,11 @@ function ScreenerPanel({ data, loading, error, lastScan, onRefresh, onSelect }) 
               <span style={{ color: 'var(--fg-muted)', fontSize: 14 }}>{rows.length} saham, {g.note}</span>
             </div>
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', minWidth: 920, borderCollapse: 'collapse' }}>
+              <table style={{ width: '100%', minWidth: 920, borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                {/* lebar tetap: kolom sejajar di semua kelompok */}
+                <colgroup>
+                  {[8, 14, 8, 11, 11, 9, 9, 8, 12, 10].map((w, i) => <col key={i} style={{ width: `${w}%` }} />)}
+                </colgroup>
                 <thead>
                   <tr>
                     <th scope="col" style={{ ...th, textAlign: 'left', paddingLeft: 0 }}>Saham</th>

@@ -168,7 +168,7 @@ const ISO_ICONS = (() => {
       box(-30, -10, 0, 12, 12, 30, red), box(-30, 4, 0, 12, 12, 20, red), box(-30, 18, 0, 12, 12, 10, red),
       box(-12, -28, 0, 12, 12, 10, green), box(2, -28, 0, 12, 12, 20, green), box(16, -28, 0, 12, 12, 30, green),
     ]),
-    analyzer: flat([box(-22, -4, 8, 8, 8, 26, green), box(-6, -4, 4, 8, 8, 16, red), box(10, -4, 12, 8, 8, 34, green)]),
+    analyzer: flat([box(-24, -6, 8, 12, 12, 30, green), box(-6, -6, 4, 12, 12, 18, red), box(12, -6, 12, 12, 12, 38, green)]),
     heatmap: flat([
       box(-27, -27, 0, 16, 16, 12, green), box(-9, -27, 0, 16, 16, 6, red), box(9, -27, 0, 16, 16, 18, green),
       box(-27, -9, 0, 16, 16, 5, red), box(-9, -9, 0, 16, 16, 22, green), box(9, -9, 0, 16, 16, 8, red),
