@@ -683,8 +683,9 @@ function ProfitCalc() {
   const [buyPrice, setBuyPrice] = useStateC(2500);
   const [sellPrice, setSellPrice] = useStateC(2800);
   const [lot, setLot] = useStateC(10);
-  const [feeBuy, setFeeBuy] = useStateC(0.15);
-  const [feeSell, setFeeSell] = useStateC(0.25);
+  const [feeBuy, setFeeBuy] = useStateC(() => getFees().buy);
+  const [feeSell, setFeeSell] = useStateC(() => getFees().sell);
+  useEffectC(() => saveFees({ buy: Number(feeBuy) || 0, sell: Number(feeSell) || 0 }), [feeBuy, feeSell]);
 
   const result = useMemoC(() => {
     const shares = (Number(lot) || 0) * 100;
@@ -750,8 +751,16 @@ function ProfitCalc() {
               hint="Termasuk PPh 0.1%"
             />
           </div>
-          <div style={{ fontSize: 12, color: 'var(--fg-faint)' }}>
-            Default: 0.15% (beli) & 0.25% (jual) — sesuai standar broker Indonesia.
+          <div style={{ fontSize: 13, color: 'var(--fg-muted)', lineHeight: 1.5 }}>
+            Isi sesuai broker kamu. Tersimpan di browser ini dan dipakai juga di nota halaman depan
+            dan paper trade.{' '}
+            <button
+              type="button"
+              onClick={() => { setFeeBuy(FEE_DEFAULT.buy); setFeeSell(FEE_DEFAULT.sell); }}
+              style={{ font: 'inherit', color: 'var(--fg)', textDecoration: 'underline', textUnderlineOffset: 3 }}
+            >
+              Pakai standar 0,15% dan 0,25%
+            </button>
           </div>
         </div>
 

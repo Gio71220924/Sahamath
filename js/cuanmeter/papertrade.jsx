@@ -8,8 +8,8 @@ const { useState: useStateP, useEffect: useEffectP, useRef: useRefP } = React;
 
 const PT_KEY = 'cuanmeter:papertrade';
 const PT_DEFAULT_MODAL = 100000000; // Rp 100 juta
-const FEE_BUY = 0.0015;  // 0.15%
-const FEE_SELL = 0.0025; // 0.25% (termasuk pajak jual)
+// Fee broker dari kalkulator Profit (getFees, persen) → pecahan. Fee jual sudah termasuk pajak jual.
+const ptFee = (side) => (Number(getFees()[side]) || 0) / 100;
 const ptListeners = new Set();
 
 function ptDefault() {
@@ -54,7 +54,7 @@ function buyPaper(ticker, lot, price) {
   const s = getPaper();
   const shares = lot * 100;
   const cost = shares * price;
-  const fee = s.feeOn ? cost * FEE_BUY : 0;
+  const fee = s.feeOn ? cost * ptFee('buy') : 0;
   const total = cost + fee;
   if (total > s.cash) return { ok: false, error: 'Cash tidak cukup' };
   const h = s.holdings[code] || { lot: 0, avg: 0 };
@@ -77,7 +77,7 @@ function sellPaper(ticker, lot, price) {
   if (!h || lot > h.lot) return { ok: false, error: 'Lot melebihi yang dimiliki' };
   const shares = lot * 100;
   const proceeds = shares * price;
-  const fee = s.feeOn ? proceeds * FEE_SELL : 0;
+  const fee = s.feeOn ? proceeds * ptFee('sell') : 0;
   const realized = (price - h.avg) * shares - fee;
   const remLot = h.lot - lot;
   const holdings = { ...s.holdings };
@@ -116,10 +116,10 @@ function TradeModal({ ticker, price, mode, held, onClose }) {
   const n = Math.floor(Number(lot)) || 0;
   const shares = n * 100;
   const value = shares * price;
-  const feeRate = mode === 'buy' ? FEE_BUY : FEE_SELL;
+  const feeRate = mode === 'buy' ? ptFee('buy') : ptFee('sell');
   const fee = s.feeOn ? value * feeRate : 0;
   const total = mode === 'buy' ? value + fee : value - fee;
-  const maxBuyLot = price > 0 ? Math.floor(s.cash / (price * 100 * (1 + (s.feeOn ? FEE_BUY : 0)))) : 0;
+  const maxBuyLot = price > 0 ? Math.floor(s.cash / (price * 100 * (1 + (s.feeOn ? ptFee('buy') : 0)))) : 0;
   const buyLimitExceeded = mode === 'buy' && total > s.cash;
   const sellLimitExceeded = mode === 'sell' && n > held;
   const invalidLot = n <= 0;
@@ -338,5 +338,5 @@ function PaperBuyButton({ ticker, price }) {
 
 Object.assign(window, {
   getPaper, resetPaper, setPaperFee, buyPaper, sellPaper, subscribePaper, usePaper,
-  PaperTradePage, PaperBuyButton, PT_DEFAULT_MODAL, PT_FEE_BUY: FEE_BUY, PT_FEE_SELL: FEE_SELL,
+  PaperTradePage, PaperBuyButton, PT_DEFAULT_MODAL,
 });

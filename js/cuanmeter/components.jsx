@@ -208,6 +208,15 @@ function NotaCut() {
   return <div aria-hidden="true" style={{ borderTop: '1.5px dashed #9ca19b', margin: '10px 0' }} />;
 }
 
+// Fee broker pengguna (persen), diatur di kalkulator Profit dan dipakai Hero + paper trade.
+const FEE_DEFAULT = { buy: 0.15, sell: 0.25 };
+function getFees() {
+  try { return { ...FEE_DEFAULT, ...JSON.parse(localStorage.getItem('sahamath-fee')) }; } catch { return FEE_DEFAULT; }
+}
+function saveFees(fees) {
+  try { localStorage.setItem('sahamath-fee', JSON.stringify(fees)); } catch {}
+}
+
 // Judul bagian landing: garis tebal di atas, kalimat biasa, tanpa badge.
 function SectionTitle({ title, sub, aside }) {
   return (
@@ -775,6 +784,9 @@ Object.assign(window, {
   NotaRow,
   NotaCut,
   SectionTitle,
+  FEE_DEFAULT,
+  getFees,
+  saveFees,
   NOTA_INK,
   NOTA_UP,
   NOTA_DOWN,

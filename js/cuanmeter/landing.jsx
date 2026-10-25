@@ -10,8 +10,7 @@
 const { useState: useStateL, useEffect: useEffectL, useMemo: useMemoL } = React;
 
 /* ---------- Hero: kalkulator profit yang langsung mencetak nota ---------- */
-const HERO_FEE_BUY = 0.0015;   // sama dengan default ProfitCalc
-const HERO_FEE_SELL = 0.0025;
+const pctId = (v) => String(v).replace('.', ',') + '%';
 
 function HeroPrinter() {
   return (
@@ -37,12 +36,13 @@ function HeroPrinter() {
 function Hero({ onNavigate }) {
   const [f, setF] = useStateL({ kode: 'BBCA', lot: 10, beli: 5125, jual: 5534 });
   const setNum = (k) => (e) => setF({ ...f, [k]: Number(e.target.value.replace(/\D/g, '')) || 0 });
+  const fee = getFees(); // fee broker yang diisi di kalkulator Profit
   const shares = f.lot * 100;
   const buyGross = shares * f.beli;
-  const buyFee = Math.round(buyGross * HERO_FEE_BUY);
+  const buyFee = Math.round(buyGross * fee.buy / 100);
   const modal = buyGross + buyFee;
   const sellGross = shares * f.jual;
-  const sellFee = Math.round(sellGross * HERO_FEE_SELL);
+  const sellFee = Math.round(sellGross * fee.sell / 100);
   const terima = sellGross - sellFee;
   const net = terima - modal;
   const pct = modal ? (net / modal) * 100 : 0;
@@ -79,7 +79,7 @@ function Hero({ onNavigate }) {
             ))}
           </form>
           <p style={{ margin: '12px 0 0', fontSize: 14, color: 'var(--fg-muted)' }}>
-            Fee broker 0,15% beli dan 0,25% jual.{' '}
+            Fee broker {pctId(fee.buy)} beli dan {pctId(fee.sell)} jual.{' '}
             <button type="button" onClick={() => onNavigate('profit')} style={{ font: 'inherit', color: 'var(--fg)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
               Ganti fee di kalkulator profit
             </button>
@@ -99,11 +99,11 @@ function Hero({ onNavigate }) {
                 <NotaCut />
                 <div>{f.kode || 'Saham'}, {rp(f.lot)} lot ({rp(shares)} lembar)</div>
                 <NotaRow k={`Beli @ ${rp(f.beli)}`} v={rp(buyGross)} />
-                <NotaRow k="Fee beli 0,15%" v={rp(buyFee)} />
+                <NotaRow k={`Fee beli ${pctId(fee.buy)}`} v={rp(buyFee)} />
                 <NotaRow k="Modal keluar" v={rp(modal)} />
                 <NotaCut />
                 <NotaRow k={`Jual @ ${rp(f.jual)}`} v={rp(sellGross)} />
-                <NotaRow k="Fee jual 0,25%" v={rp(sellFee)} />
+                <NotaRow k={`Fee jual ${pctId(fee.sell)}`} v={rp(sellFee)} />
                 <NotaRow k="Uang diterima" v={rp(terima)} />
                 <NotaCut />
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 16, fontWeight: 700, color }}>
