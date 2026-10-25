@@ -19,16 +19,22 @@ const esbuild = require('esbuild');
 const rootDir = path.resolve(__dirname, '..');
 const distDir = path.join(rootDir, 'dist');
 
-// Exact load order from index.html (React/Babel CDN tags excluded).
-const SCRIPT_ORDER = [
+// Bundle inti: cukup untuk halaman depan. app.jsx terakhir karena langsung render.
+const CORE_ORDER = [
   'js/cuanmeter/components.jsx',
   'js/cuanmeter/watchlist.jsx',
   'js/cuanmeter/tradingview.jsx',
   'js/cuanmeter/landing.jsx',
+  'js/cuanmeter/heatmap.jsx',
+  'js/cuanmeter/app.jsx',
+];
+
+// Halaman lain (~45% kode): dimuat app.jsx (loadPages) setelah halaman depan tampil.
+// File inti hanya memakai global dari sini saat render route-nya, tidak saat dimuat.
+const PAGES_ORDER = [
   'js/cuanmeter/calculators.jsx',
   'js/cuanmeter/analyzer.jsx',
   'js/cuanmeter/guides.jsx',
-  'js/cuanmeter/heatmap.jsx',
   'js/cuanmeter/risk.jsx',
   'js/cuanmeter/papertrade.jsx',
   'js/cuanmeter/arena-utils.js',
@@ -39,10 +45,10 @@ const SCRIPT_ORDER = [
   'js/cuanmeter/arena-bots.js',
   'js/cuanmeter/arena-store.jsx',
   'js/cuanmeter/arena.jsx',
-  'js/cuanmeter/app.jsx',
 ];
 
 const BUNDLE_REL = 'js/cuanmeter/app.bundle.js';
+const PAGES_REL = 'js/cuanmeter/pages.bundle.js'; // sama dengan PAGES_BUNDLE di app.jsx
 
 // Files/dirs copied verbatim into dist so `node dist/server.js` runs the build.
 const COPY_ENTRIES = [
@@ -91,14 +97,20 @@ const REACT_UMD = [
   'node_modules/react-dom/umd/react-dom.production.min.js',
 ];
 
-function buildBundle() {
-  const parts = REACT_UMD.map((rel) => fs.readFileSync(path.join(rootDir, rel), 'utf8') + '\n;');
-  for (const rel of SCRIPT_ORDER) {
+function concat(order) {
+  const parts = [];
+  for (const rel of order) {
     parts.push(`/* ${rel} */`);
     parts.push(transformOne(rel));
     parts.push(';'); // ASI safety between concatenated files
   }
   return parts.join('\n');
+}
+
+// React + inti dalam satu file; halaman lain terpisah.
+function buildBundle() {
+  const react = REACT_UMD.map((rel) => fs.readFileSync(path.join(rootDir, rel), 'utf8') + '\n;').join('\n');
+  return { core: react + '\n' + concat(CORE_ORDER), pages: concat(PAGES_ORDER) };
 }
 
 function buildIndexHtml() {
@@ -113,10 +125,21 @@ function buildIndexHtml() {
   const head = html.slice(0, start);
   const tail = html.slice(bodyEnd);
   const prodScripts = [
+    // Link langsung ke halaman lain (#profit): unduh bundle halaman bersamaan dengan bundle inti.
+    `  <script>if (/^#(?!home$)./.test(location.hash)) { var l = document.createElement('link'); l.rel = 'preload'; l.as = 'script'; l.href = '${PAGES_REL}'; document.head.appendChild(l); }</script>`,
     `  <script src="${BUNDLE_REL}"></script>`, // React sudah di dalam bundle (REACT_UMD)
     '',
   ].join('\n');
   return head + prodScripts + tail;
+}
+
+function writeBundles(outDir) {
+  const { core, pages } = buildBundle();
+  fs.mkdirSync(path.join(outDir, path.dirname(BUNDLE_REL)), { recursive: true });
+  fs.writeFileSync(path.join(outDir, BUNDLE_REL), core);
+  fs.writeFileSync(path.join(outDir, PAGES_REL), pages);
+  const kb = (s) => (Buffer.byteLength(s) / 1024).toFixed(0);
+  console.log(`[build] ${BUNDLE_REL} (${kb(core)} KB) + ${PAGES_REL} (${kb(pages)} KB)`);
 }
 
 function copyAssets() {
@@ -135,21 +158,14 @@ function copyAssets() {
 
 function build() {
   fs.rmSync(distDir, { recursive: true, force: true });
-  fs.mkdirSync(path.join(distDir, path.dirname(BUNDLE_REL)), { recursive: true });
-
-  const bundle = buildBundle();
-  fs.writeFileSync(path.join(distDir, BUNDLE_REL), bundle);
-
+  writeBundles(distDir);
   copyAssets();
   fs.writeFileSync(path.join(distDir, 'index.html'), buildIndexHtml());
-
-  const kb = (Buffer.byteLength(bundle) / 1024).toFixed(0);
-  console.log(`[build] Bundle: ${SCRIPT_ORDER.length} files -> ${BUNDLE_REL} (${kb} KB)`);
   console.log(`[build] Output: ${distDir}`);
   console.log('[build] Run: node dist/server.js');
 }
 
 // build-static.js (Vercel) reuses the bundle + production index.html.
-module.exports = { buildBundle, buildIndexHtml, BUNDLE_REL };
+module.exports = { writeBundles, buildIndexHtml };
 
 if (require.main === module) build();

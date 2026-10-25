@@ -72,6 +72,46 @@ function IHSGFloater({ compact = false }) {
   );
 }
 
+/* ---------- Bundle halaman (produksi) ----------
+   app.bundle.js cuma berisi halaman depan; kalkulator, Analyzer, Panduan, dst. ada di
+   pages.bundle.js (scripts/build-bundle.js PAGES_ORDER), dimuat setelah render pertama.
+   Dev (Babel per file) sudah memuat semuanya, jadi langsung siap. */
+const PAGES_BUNDLE = 'js/cuanmeter/pages.bundle.js';
+const pagesLoaded = () => typeof window.AveragePrice === 'function';
+let pagesPromise = null;
+
+function loadPages() {
+  if (pagesLoaded()) return Promise.resolve();
+  if (!pagesPromise) {
+    pagesPromise = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = PAGES_BUNDLE;
+      s.onerror = () => { pagesPromise = null; s.remove(); reject(new Error('pages bundle')); };
+      // Vercel membalas path yang tidak ada dengan index.html (200): onload terpanggil tanpa halaman
+      s.onload = () => (pagesLoaded() ? resolve() : s.onerror());
+      document.body.appendChild(s);
+    });
+  }
+  return pagesPromise;
+}
+
+function PagesLoading({ failed, onRetry }) {
+  return (
+    <main className="container" style={{ minHeight: '60vh', padding: '48px 0' }}>
+      {failed ? (
+        <p role="alert" style={{ margin: 0, fontSize: 16, color: 'var(--fg-muted)' }}>
+          Halaman belum bisa dimuat. Periksa koneksi, lalu{' '}
+          <button type="button" onClick={onRetry} style={{ font: 'inherit', color: 'var(--fg)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+            coba lagi
+          </button>.
+        </p>
+      ) : (
+        <p aria-live="polite" style={{ margin: 0, fontSize: 16, color: 'var(--fg-muted)' }}>Memuat halaman...</p>
+      )}
+    </main>
+  );
+}
+
 function readRouteFromHash() {
   const h = window.location.hash.slice(1);
   return ROUTES.includes(h) ? h : 'home';
@@ -81,6 +121,14 @@ function App() {
   const [route, setRoute] = useStateA(readRouteFromHash);
   const [theme, setTheme] = useStateA('fintech');
   const [pendingTicker, setPendingTicker] = useStateA(null);
+  const [pagesReady, setPagesReady] = useStateA(pagesLoaded);
+  const [pagesFailed, setPagesFailed] = useStateA(false);
+
+  const fetchPages = () => {
+    setPagesFailed(false);
+    loadPages().then(() => setPagesReady(true), () => setPagesFailed(true));
+  };
+  useEffectA(fetchPages, []); // langsung setelah render pertama, supaya klik menu tidak menunggu
 
   // Sync theme to <body data-theme="...">
   useEffectA(() => {
@@ -105,6 +153,7 @@ function App() {
   };
 
   const screen = (() => {
+    if (route !== 'home' && !pagesReady) return <PagesLoading failed={pagesFailed} onRetry={fetchPages} />;
     switch (route) {
       case 'average':  return <AveragePrice />;
       case 'araarb':   return <ARAARB />;

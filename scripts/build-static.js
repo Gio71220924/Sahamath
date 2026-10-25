@@ -7,22 +7,19 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { buildBundle, buildIndexHtml, BUNDLE_REL } = require('./build-bundle');
+const { writeBundles, buildIndexHtml } = require('./build-bundle');
 
 const rootDir = path.resolve(__dirname, '..');
 const distDir = path.join(rootDir, 'dist');
 const ASSETS = ['CSS', 'favicon.svg', 'robots.txt', 'sitemap.xml'];
 
 fs.rmSync(distDir, { recursive: true, force: true });
-fs.mkdirSync(path.join(distDir, path.dirname(BUNDLE_REL)), { recursive: true });
 
 for (const entry of ASSETS) {
   const source = path.join(rootDir, entry);
   if (fs.existsSync(source)) fs.cpSync(source, path.join(distDir, entry), { recursive: true });
 }
 
-const bundle = buildBundle();
-fs.writeFileSync(path.join(distDir, BUNDLE_REL), bundle);
+writeBundles(distDir);
 fs.writeFileSync(path.join(distDir, 'index.html'), buildIndexHtml());
-
-console.log(`[Build] Static frontend: ${BUNDLE_REL} (${(Buffer.byteLength(bundle) / 1024).toFixed(0)} KB) -> ${distDir}`);
+console.log(`[Build] Static frontend -> ${distDir}`);
