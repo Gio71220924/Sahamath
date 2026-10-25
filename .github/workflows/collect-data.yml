@@ -24,7 +24,7 @@ jobs:
         run: |
           cp scripts/collect_daily.py "$RUNNER_TEMP/"
           if git ls-remote --exit-code --heads origin data; then
-            git checkout data
+            git switch data   # bukan checkout: main punya folder data/, checkout jadi ambigu
           else
             git checkout --orphan data
             git rm -rfq .
