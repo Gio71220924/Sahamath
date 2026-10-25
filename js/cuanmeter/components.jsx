@@ -754,6 +754,11 @@ function AnimatedNumber({
   const startRef = useRef(0);
 
   useEffect(() => {
+    // "kurangi gerakan" di sistem: langsung tampilkan angka akhir
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setDisplay(value);
+      return undefined;
+    }
     fromRef.current = display;
     startRef.current = performance.now();
     let raf;

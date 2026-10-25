@@ -582,8 +582,8 @@ function ARAARB() {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <Icon name="rocket" size={18} />
-                  <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--success)', letterSpacing: '0.08em' }}>
-                    AUTO REJECT ATAS · MOON
+                  <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--success)' }}>
+                    ARA (batas atas)
                   </span>
                 </div>
                 <div style={{ fontSize: 14, color: 'var(--fg-muted)' }}>Batas tertinggi harga hari ini</div>
@@ -612,8 +612,8 @@ function ARAARB() {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <Icon name="diamond" size={18} />
-                  <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--danger)', letterSpacing: '0.08em' }}>
-                    AUTO REJECT BAWAH · BOTTOM
+                  <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--danger)' }}>
+                    ARB (batas bawah)
                   </span>
                 </div>
                 <div style={{ fontSize: 14, color: 'var(--fg-muted)' }}>Batas terendah harga hari ini</div>
@@ -925,7 +925,7 @@ function Amunisi() {
 
           <div className="input-group">
             <label className="label">
-              Risk per Trade <span className="muted">· max loss yg lo terima</span>
+              Risiko per trade <span className="muted">(rugi maksimal yang kamu terima)</span>
             </label>
             <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
               {[0.5, 1, 2, 3, 5].map((p) => (
