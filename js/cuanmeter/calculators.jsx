@@ -12,6 +12,8 @@ const { useState: useStateC, useMemo: useMemoC, useEffect: useEffectC, useRef: u
 
 /* ---------- shared input ---------- */
 function NumberInput({ label, value, onChange, prefix, suffix, hint, placeholder }) {
+  // Teks mentah selama diketik, supaya "0," tidak langsung diformat jadi "0" (koma desimal hilang).
+  const [text, setText] = useStateC(null);
   return (
     <div className="input-group">
       {label && <label className="label">{label}</label>}
@@ -36,9 +38,11 @@ function NumberInput({ label, value, onChange, prefix, suffix, hint, placeholder
           className="input"
           type="text"
           inputMode="decimal"
-          value={value === '' || value == null ? '' : value.toLocaleString('id-ID')}
+          value={text ?? (value === '' || value == null ? '' : value.toLocaleString('id-ID'))}
           placeholder={placeholder}
+          onBlur={() => setText(null)}
           onChange={(e) => {
+            setText(e.target.value);
             const raw = e.target.value
               .replace(/[^\d.,]/g, '')
               .replace(/\./g, '')
