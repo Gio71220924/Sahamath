@@ -43,7 +43,10 @@ def tag(raw, name):
 def news(code, collected):
     q = requests.utils.quote(f'"{code}" saham when:2d')
     url = f"https://news.google.com/rss/search?q={q}&hl=id-ID&gl=ID&ceid=ID:id"
-    xml = requests.get(url, headers=UA, timeout=20).text
+    r = requests.get(url, headers=UA, timeout=20)
+    xml = r.text
+    if r.status_code != 200 or "<rss" not in xml[:500]:  # halaman blokir/consent, bukan feed
+        raise RuntimeError(f"HTTP {r.status_code}, bukan RSS")
     rows = []
     for raw in xml.split("<item>")[1:]:
         pub = tag(raw, "pubDate")
@@ -78,20 +81,33 @@ def main():
     os.makedirs(os.path.join(out, "news"), exist_ok=True)
     os.makedirs(os.path.join(out, "ksei"), exist_ok=True)
 
+    news_path = os.path.join(out, "news", f"{today}.jsonl.gz")
     rows, failed = [], []
-    for code in top_tickers():
-        try:
-            rows += news(code, today)
-        except Exception as e:  # satu ticker gagal jangan bikin seluruh hari hilang
-            failed.append(f"{code}: {e}")
-        time.sleep(0.5)
-    with gzip.open(os.path.join(out, "news", f"{today}.jsonl.gz"), "wt", encoding="utf-8") as f:
-        f.writelines(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
-    print(f"news: {len(rows)} judul, {len(failed)} ticker gagal {failed[:3]}")
+    if os.path.exists(news_path):  # jadwal cadangan: hari ini sudah terkumpul
+        print("news hari ini sudah ada, dilewati")
+    else:
+        streak = 0
+        for code in top_tickers():
+            try:
+                rows += news(code, today)
+                streak = 0
+            except Exception as e:  # satu ticker gagal jangan bikin seluruh hari hilang
+                failed.append(f"{code}: {e}")
+                streak += 1
+                if streak >= 5:  # diblokir: berhenti cepat, jangan habiskan 13 menit
+                    break
+            time.sleep(0.5)
+        if rows:
+            with gzip.open(news_path, "wt", encoding="utf-8") as f:
+                f.writelines(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
+        print(f"news: {len(rows)} judul, {len(failed)} ticker gagal {failed[:3]}")
 
     print("ksei baru:", ksei_archive(os.path.join(out, "ksei")) or "-")
-    if not rows:
-        sys.exit("news kosong: Google News kemungkinan memblokir runner")
+    if not rows and not os.path.exists(news_path):
+        msg = f"news kosong ({failed[:1]}): Google News kemungkinan memblokir runner"
+        if os.environ.get("FINAL_ATTEMPT") == "true":
+            sys.exit(msg)
+        print(f"::warning::{msg}. Dicoba lagi di jadwal cadangan.")
 
 
 if __name__ == "__main__":
