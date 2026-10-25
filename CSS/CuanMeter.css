@@ -44,7 +44,7 @@ body[data-theme="fintech"] {
   --primary-soft: #e6f6ef;
   --primary-fg: #ffffff;
   --success: #007f55;
-  --danger: #e23e57;
+  --danger: #c8283f;  /* 5,5:1 di atas putih (WCAG AA); dulu #e23e57 = 4,1:1 */
   --warning: #f59e0b;
   --info: #2563eb;
   --radius-sm: 8px;
@@ -118,7 +118,7 @@ body[data-theme="glass"] {
   --primary-soft: rgba(0, 168, 107, 0.18);
   --primary-fg: #ffffff;
   --success: #007f55;
-  --danger: #e23e57;
+  --danger: #c8283f;
   --warning: #f59e0b;
   --info: #2563eb;
   --radius-sm: 12px;

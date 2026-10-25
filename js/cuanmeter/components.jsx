@@ -618,7 +618,7 @@ function Footer({ onNavigate }) {
           </p>
         </div>
         <div>
-          <h4 style={footerHeadStyle}>Kalkulator</h4>
+          <h2 style={footerHeadStyle}>Kalkulator</h2>
           <ul style={footerListStyle}>
             {[
               { label: 'Rata-rata', id: 'average' },
@@ -635,7 +635,7 @@ function Footer({ onNavigate }) {
           </ul>
         </div>
         <div>
-          <h4 style={footerHeadStyle}>Belajar</h4>
+          <h2 style={footerHeadStyle}>Belajar</h2>
           <ul style={footerListStyle}>
             {[
               { label: 'Panduan', id: 'guides' },

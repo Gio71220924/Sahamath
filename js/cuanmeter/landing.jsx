@@ -1019,7 +1019,7 @@ function IpoNewsWidget() {
 
 function LandingPage({ onNavigate }) {
   return (
-    <>
+    <main>
       <Hero onNavigate={onNavigate} />
       <StockMarquee />
       <WatchlistWidget onNavigate={onNavigate} />
@@ -1030,7 +1030,7 @@ function LandingPage({ onNavigate }) {
       <ToolsGrid onNavigate={onNavigate} />
       <GuidesSection onNavigate={onNavigate} />
       <FinalCTA onNavigate={onNavigate} />
-    </>
+    </main>
   );
 }
 
