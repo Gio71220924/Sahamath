@@ -147,18 +147,7 @@ function WatchlistWidget({ onNavigate }) {
   return (
     <section className="watchlist-widget" style={{ padding: '80px 0' }}>
       <div className="container">
-        <div style={{ marginBottom: 20 }}>
-          <div className="badge" style={{ marginBottom: 12 }}>
-            <Icon name="star" size={12} />
-            <span>WATCHLIST · SAHAM PANTAUANMU</span>
-          </div>
-          <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', letterSpacing: '-0.025em', marginBottom: 8 }}>
-            Saham <span style={{ color: 'var(--primary)' }}>pantauanmu</span>.
-          </h2>
-          <p style={{ fontSize: 15, color: 'var(--fg-muted)', margin: 0 }}>
-            Tersimpan di browser ini. Klik baris buat analisis, ★ di Analyzer buat nambah.
-          </p>
-        </div>
+        <SectionTitle title="Saham pantauanmu" sub="Tersimpan di browser ini. Klik baris untuk analisis, atau ★ di Analyzer untuk menambah." />
 
         <WatchlistSearch />
 

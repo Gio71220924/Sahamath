@@ -208,6 +208,19 @@ function NotaCut() {
   return <div aria-hidden="true" style={{ borderTop: '1.5px dashed #9ca19b', margin: '10px 0' }} />;
 }
 
+// Judul bagian landing: garis tebal di atas, kalimat biasa, tanpa badge.
+function SectionTitle({ title, sub, aside }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, paddingTop: 24, borderTop: '2px solid var(--fg)', marginBottom: 24 }}>
+      <div style={{ maxWidth: 640 }}>
+        <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 40px)', letterSpacing: '-0.03em' }}>{title}</h2>
+        {sub && <p style={{ margin: '10px 0 0', fontSize: 16, lineHeight: 1.5, color: 'var(--fg-muted)' }}>{sub}</p>}
+      </div>
+      {aside}
+    </div>
+  );
+}
+
 function IsoIcon({ name, size = 36 }) {
   const shapes = ISO_ICONS[name];
   if (!shapes) return null;
@@ -784,6 +797,7 @@ Object.assign(window, {
   NotaEdge,
   NotaRow,
   NotaCut,
+  SectionTitle,
   NOTA_INK,
   NOTA_UP,
   NOTA_DOWN,

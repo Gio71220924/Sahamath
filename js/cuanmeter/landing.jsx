@@ -291,24 +291,7 @@ function IHSGChart() {
   return (
     <section style={{ padding: '80px 0' }}>
       <div className="container">
-        <div style={{ marginBottom: 24 }}>
-          <div className="badge" style={{ marginBottom: 12 }}>
-            <Icon name="chart" size={12} />
-            <span>IHSG · INDEKS HARGA SAHAM GABUNGAN</span>
-          </div>
-          <h2
-            style={{
-              fontSize: 'clamp(28px, 4vw, 40px)',
-              letterSpacing: '-0.025em',
-              marginBottom: 8,
-            }}
-          >
-            Pergerakan IHSG <span style={{ color: 'var(--primary)' }}>real-time</span>.
-          </h2>
-          <p style={{ fontSize: 15, color: 'var(--fg-muted)', margin: 0 }}>
-            Data live dari TradingView · interactive — drag, zoom, ganti timeframe.
-          </p>
-        </div>
+        <SectionTitle title="Pergerakan IHSG" sub="Data live dari TradingView. Grafiknya bisa digeser, di-zoom, dan diganti timeframe-nya." />
 
         <div
           className="card"
@@ -404,11 +387,11 @@ function formatCalendarEventTitle(event) {
   if (!event.ticker) return event.title;
 
   const typeLabel = {
-    cum: 'CUM DATE',
-    rec: 'RECORD DATE',
-    eff: 'EFFECTIVE DATE',
+    cum: 'cum date',
+    rec: 'record date',
+    eff: 'effective date',
     rups: 'RUPS',
-  }[event.eventType] || 'CORP ACT';
+  }[event.eventType] || 'corporate action';
 
   return `${event.ticker} ${typeLabel}`;
 }
@@ -520,316 +503,267 @@ function MarketCalendarWidget() {
   }, [range, week]);
 
   return (
-    <section
-      style={{
-        padding: '56px 0',
-        background: 'var(--bg-soft)',
-        borderTop: '1px solid var(--border)',
-        borderBottom: '1px solid var(--border)',
-      }}
-    >
+    <section style={{ padding: '72px 0' }}>
       <div className="container">
+        <SectionTitle
+          title={range === 'week' ? `Event penting minggu ke-${week}` : 'Event penting bulan ini'}
+          sub="Corporate action dan data makro yang perlu dicek sebelum masuk posisi."
+          aside={updatedAt && (
+            <span className="mono" style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
+              Diperbarui {new Date(updatedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}{rangeMeta ? `, ${rangeMeta}` : ''}
+            </span>
+          )}
+        />
+
         <div
-          className="market-calendar-grid"
+          className="cal-events-panel"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(240px, 0.85fr) minmax(0, 1.6fr)',
-            gap: 24,
-            alignItems: 'stretch',
+            gap: 10,
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius)',
+            boxShadow: 'var(--shadow)',
+            padding: 12,
           }}
         >
-          <div style={{ alignSelf: 'center' }}>
-            <div className="badge" style={{ marginBottom: 14 }}>
-              <Icon name="bookmark" size={12} />
-              <span>MARKET CALENDAR</span>
-            </div>
-            <h2
-              style={{
-                fontSize: 'clamp(26px, 4vw, 38px)',
-                lineHeight: 1.04,
-                letterSpacing: '-0.03em',
-                marginBottom: 12,
-              }}
-            >
-              Event penting<br />
-              <span style={{ color: 'var(--primary)' }}>{range === 'week' ? `minggu ${week}.` : 'bulan ini.'}</span>
-            </h2>
-            <p style={{ color: 'var(--fg-muted)', lineHeight: 1.6, margin: 0, fontSize: 14 }}>
-              Corporate action dan data makro yang perlu dicek sebelum masuk posisi.
-            </p>
-            {updatedAt && (
-              <div className="mono" style={{ marginTop: 14, fontSize: 11, color: 'var(--fg-muted)' }}>
-                Sync {new Date(updatedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-              </div>
-            )}
-            {rangeMeta && (
-              <div className="mono" style={{ marginTop: 6, fontSize: 11, color: 'var(--fg-muted)' }}>
-                {rangeMeta}
-              </div>
-            )}
-          </div>
-
-          <div
-            className="cal-events-panel"
-            style={{
-              display: 'grid',
-              gap: 10,
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)',
-              boxShadow: 'var(--shadow)',
-              padding: 12,
-            }}
-          >
-            <div style={{
-              display: 'flex',
-              gap: 8,
-              justifyContent: 'flex-end',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              padding: '0 2px 2px',
-            }}>
-              {[
-                { id: 'month', label: 'Bulan ini' },
-              ].map((option) => {
-                const active = range === option.id;
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => setRange(option.id)}
-                    style={{
-                      border: `1px solid ${active ? 'var(--primary)' : 'var(--border)'}`,
-                      background: active ? 'var(--primary-soft)' : 'var(--bg)',
-                      color: active ? 'var(--primary)' : 'var(--fg-muted)',
-                      borderRadius: 6,
-                      padding: '7px 10px',
-                      fontSize: 12,
-                      fontWeight: 800,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-              {[1, 2, 3, 4].map((weekNo) => {
-                const active = range === 'week' && week === weekNo;
-                return (
-                  <button
-                    key={weekNo}
-                    type="button"
-                    onClick={() => {
-                      setRange('week');
-                      setWeek(weekNo);
-                    }}
-                    style={{
-                      border: `1px solid ${active ? 'var(--primary)' : 'var(--border)'}`,
-                      background: active ? 'var(--primary-soft)' : 'var(--bg)',
-                      color: active ? 'var(--primary)' : 'var(--fg-muted)',
-                      borderRadius: 6,
-                      padding: '7px 10px',
-                      fontSize: 12,
-                      fontWeight: 800,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    M{weekNo}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="cal-dot-legend">
-              {[
-                { color: 'var(--primary)', label: 'Dividen' },
-                { color: '#3b82f6', label: 'RUPS / RUPO' },
-                { color: '#b91c1c', label: 'Makro' },
-              ].map(({ color, label }) => (
-                <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0 }} />
-                  <span style={{ fontSize: 11, color: 'var(--fg-muted)' }}>{label}</span>
-                </span>
-              ))}
-            </div>
-
-            {(loading || loadError || events.length === 0) && (
-              <div style={{
-                padding: 18,
-                borderRadius: 'calc(var(--radius) - 4px)',
-                border: '1px dashed var(--border)',
-                background: 'var(--bg)',
-                color: 'var(--fg-muted)',
-                fontSize: 13,
-                lineHeight: 1.5,
-              }}>
-                {loading ? 'Memuat kalender...' : loadError || 'Belum ada event terjadwal di range ini.'}
-              </div>
-            )}
-
-            {events.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE).map((event) => {
-              const impact = impactStyle(event.impact, event.category);
-              const dateParts = calendarDateParts(event);
+          <div style={{
+            display: 'flex',
+            gap: 8,
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            padding: '0 2px 2px',
+          }}>
+            {[
+              { id: 'month', label: 'Bulan ini' },
+            ].map((option) => {
+              const active = range === option.id;
               return (
-                <div
-                  key={event.id}
-                  className="cal-event-card"
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setRange(option.id)}
                   style={{
-                    display: 'grid',
-                    gridTemplateColumns: '76px minmax(0, 1fr) auto',
-                    gap: 14,
-                    alignItems: 'center',
-                    padding: 14,
-                    borderRadius: 'calc(var(--radius) - 4px)',
-                    border: '1px solid var(--border)',
-                    background: 'var(--bg)',
+                    border: `1px solid ${active ? 'var(--primary)' : 'var(--border)'}`,
+                    background: active ? 'var(--primary-soft)' : 'var(--bg)',
+                    color: active ? 'var(--primary)' : 'var(--fg-muted)',
+                    borderRadius: 6,
+                    padding: '7px 10px',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    cursor: 'pointer',
                   }}
                 >
-                  <div
-                    className="cal-event-datebox"
+                  {option.label}
+                </button>
+              );
+            })}
+            {[1, 2, 3, 4].map((weekNo) => {
+              const active = range === 'week' && week === weekNo;
+              return (
+                <button
+                  key={weekNo}
+                  type="button"
+                  onClick={() => {
+                    setRange('week');
+                    setWeek(weekNo);
+                  }}
+                  style={{
+                    border: `1px solid ${active ? 'var(--primary)' : 'var(--border)'}`,
+                    background: active ? 'var(--primary-soft)' : 'var(--bg)',
+                    color: active ? 'var(--primary)' : 'var(--fg-muted)',
+                    borderRadius: 6,
+                    padding: '7px 10px',
+                    fontSize: 12,
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                  }}
+                >
+                  M{weekNo}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="cal-dot-legend">
+            {[
+              { color: 'var(--primary)', label: 'Dividen' },
+              { color: '#3b82f6', label: 'RUPS / RUPO' },
+              { color: '#b91c1c', label: 'Makro' },
+            ].map(({ color, label }) => (
+              <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0 }} />
+                <span style={{ fontSize: 11, color: 'var(--fg-muted)' }}>{label}</span>
+              </span>
+            ))}
+          </div>
+
+          {(loading || loadError || events.length === 0) && (
+            <div style={{
+              padding: 18,
+              borderRadius: 'calc(var(--radius) - 4px)',
+              border: '1px dashed var(--border)',
+              background: 'var(--bg)',
+              color: 'var(--fg-muted)',
+              fontSize: 13,
+              lineHeight: 1.5,
+            }}>
+              {loading ? 'Memuat kalender...' : loadError || 'Belum ada event terjadwal di range ini.'}
+            </div>
+          )}
+
+          {events.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE).map((event) => {
+            const impact = impactStyle(event.impact, event.category);
+            const dateParts = calendarDateParts(event);
+            return (
+              <div
+                key={event.id}
+                className="cal-event-card"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '76px minmax(0, 1fr) auto',
+                  gap: 14,
+                  alignItems: 'center',
+                  padding: 14,
+                  borderRadius: 'calc(var(--radius) - 4px)',
+                  border: '1px solid var(--border)',
+                  background: 'var(--bg)',
+                }}
+              >
+                <div
+                  className="cal-event-datebox"
+                  style={{
+                    minHeight: 64,
+                    borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    background: 'var(--bg-soft)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  <span className="cal-event-dot" style={{
+                    background: event.label === 'Dividen' ? 'var(--primary)' :
+                      (event.label === 'RUPS' || event.label === 'RUPO') ? '#3b82f6' :
+                      event.category === 'macro' ? '#b91c1c' : 'var(--primary)'
+                  }} />
+                  <span
+                    className="mono"
                     style={{
-                      minHeight: 64,
-                      borderRadius: 8,
-                      border: '1px solid var(--border)',
-                      background: 'var(--bg-soft)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      textAlign: 'center',
-                      position: 'relative',
+                      fontSize: event.date ? 24 : 12,
+                      fontWeight: 800,
+                      color: 'var(--fg)',
+                      lineHeight: 1,
                     }}
                   >
-                    <span className="cal-event-dot" style={{
+                    {dateParts.day}
+                  </span>
+                  <span
+                    className="mono"
+                    style={{
+                      marginTop: 5,
+                      fontSize: 10,
+                      fontWeight: 800,
+                      color: 'var(--fg-muted)',
+                    }}
+                  >
+                    {dateParts.month}
+                  </span>
+                </div>
+
+                <div style={{ minWidth: 0 }}>
+                  <div className="cal-event-meta-mobile">
+                    <span className="cal-event-dot-inline" style={{
                       background: event.label === 'Dividen' ? 'var(--primary)' :
                         (event.label === 'RUPS' || event.label === 'RUPO') ? '#3b82f6' :
                         event.category === 'macro' ? '#b91c1c' : 'var(--primary)'
                     }} />
-                    <span
-                      className="mono"
-                      style={{
-                        fontSize: event.date ? 24 : 12,
-                        fontWeight: 800,
-                        color: 'var(--fg)',
-                        lineHeight: 1,
-                      }}
-                    >
-                      {dateParts.day}
-                    </span>
-                    <span
-                      className="mono"
-                      style={{
-                        marginTop: 5,
-                        fontSize: 10,
-                        fontWeight: 800,
-                        color: 'var(--fg-muted)',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.06em',
-                      }}
-                    >
-                      {dateParts.month}
+                    <span className="mono" style={{ fontSize: 11, fontWeight: 800, color: 'var(--fg-muted)' }}>
+                      {dateParts.day} {dateParts.month}
                     </span>
                   </div>
-
-                  <div style={{ minWidth: 0 }}>
-                    <div className="cal-event-meta-mobile">
-                      <span className="cal-event-dot-inline" style={{
-                        background: event.label === 'Dividen' ? 'var(--primary)' :
-                          (event.label === 'RUPS' || event.label === 'RUPO') ? '#3b82f6' :
-                          event.category === 'macro' ? '#b91c1c' : 'var(--primary)'
-                      }} />
-                      <span className="mono" style={{ fontSize: 11, fontWeight: 800, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                        {dateParts.day} {dateParts.month}
-                      </span>
-                    </div>
-                    <h3
-                      className="cal-event-title"
-                      style={{
-                        fontSize: 16,
-                        letterSpacing: '-0.02em',
-                        marginBottom: 5,
-                        textTransform: event.ticker ? 'uppercase' : 'none',
-                      }}
-                    >
-                      {formatCalendarEventTitle(event)}
-                    </h3>
-                    {event.label === 'RUPS' || event.label === 'RUPO' ? (
-                      <p className="cal-event-desc" style={{ margin: 0, color: 'var(--fg-muted)', fontSize: 13, lineHeight: 1.45 }}>
-                        {formatRupsDisplay(event.summary || event.detail)}
-                      </p>
-                    ) : (
-                      <p className="cal-event-desc" style={{
-                        margin: 0, color: 'var(--fg-muted)', fontSize: 13, lineHeight: 1.45,
-                        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                      }}>
-                        {formatDivSummary(event.summary || event.detail || '')}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="cal-event-badge" style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <span
-                      style={{
-                        fontSize: 10,
-                        fontWeight: 900,
-                        letterSpacing: '0.06em',
-                        padding: '5px 7px',
-                        borderRadius: 6,
-                        color: impact.color,
-                        background: impact.background,
-                        border: `1px solid ${impact.border}`,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {event.label}
-                    </span>
-                  </div>
+                  <h3
+                    className="cal-event-title"
+                    style={{
+                      fontSize: 16,
+                      letterSpacing: '-0.02em',
+                      marginBottom: 5,
+                    }}
+                  >
+                    {formatCalendarEventTitle(event)}
+                  </h3>
+                  {event.label === 'RUPS' || event.label === 'RUPO' ? (
+                    <p className="cal-event-desc" style={{ margin: 0, color: 'var(--fg-muted)', fontSize: 13, lineHeight: 1.45 }}>
+                      {formatRupsDisplay(event.summary || event.detail)}
+                    </p>
+                  ) : (
+                    <p className="cal-event-desc" style={{
+                      margin: 0, color: 'var(--fg-muted)', fontSize: 13, lineHeight: 1.45,
+                      display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                    }}>
+                      {formatDivSummary(event.summary || event.detail || '')}
+                    </p>
+                  )}
                 </div>
-              );
-            })}
 
-            {events.length > PAGE_SIZE && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 4 }}>
-                <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
-                  {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, events.length)} dari {events.length} event
-                </span>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button
-                    type="button"
-                    onClick={() => setPage(p => p - 1)}
-                    disabled={page === 0}
+                <div className="cal-event-badge" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <span
                     style={{
-                      padding: '5px 12px', fontSize: 13, fontWeight: 700,
-                      borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)',
-                      background: 'var(--bg)', color: page === 0 ? 'var(--fg-faint)' : 'var(--fg)',
-                      cursor: page === 0 ? 'default' : 'pointer',
+                      fontSize: 10,
+                      fontWeight: 900,
+                      letterSpacing: '0.06em',
+                      padding: '5px 7px',
+                      borderRadius: 6,
+                      color: impact.color,
+                      background: impact.background,
+                      border: `1px solid ${impact.border}`,
+                      whiteSpace: 'nowrap',
                     }}
-                  >‹ Prev</button>
-                  <button
-                    type="button"
-                    onClick={() => setPage(p => p + 1)}
-                    disabled={(page + 1) * PAGE_SIZE >= events.length}
-                    style={{
-                      padding: '5px 12px', fontSize: 13, fontWeight: 700,
-                      borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)',
-                      background: 'var(--bg)', color: (page + 1) * PAGE_SIZE >= events.length ? 'var(--fg-faint)' : 'var(--fg)',
-                      cursor: (page + 1) * PAGE_SIZE >= events.length ? 'default' : 'pointer',
-                    }}
-                  >Next ›</button>
+                  >
+                    {event.label}
+                  </span>
                 </div>
               </div>
-            )}
-          </div>
+            );
+          })}
+
+          {events.length > PAGE_SIZE && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 4 }}>
+              <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
+                {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, events.length)} dari {events.length} event
+              </span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  type="button"
+                  onClick={() => setPage(p => p - 1)}
+                  disabled={page === 0}
+                  style={{
+                    padding: '5px 12px', fontSize: 13, fontWeight: 700,
+                    borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)',
+                    background: 'var(--bg)', color: page === 0 ? 'var(--fg-faint)' : 'var(--fg)',
+                    cursor: page === 0 ? 'default' : 'pointer',
+                  }}
+                >‹ Prev</button>
+                <button
+                  type="button"
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={(page + 1) * PAGE_SIZE >= events.length}
+                  style={{
+                    padding: '5px 12px', fontSize: 13, fontWeight: 700,
+                    borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)',
+                    background: 'var(--bg)', color: (page + 1) * PAGE_SIZE >= events.length ? 'var(--fg-faint)' : 'var(--fg)',
+                    cursor: (page + 1) * PAGE_SIZE >= events.length ? 'default' : 'pointer',
+                  }}
+                >Next ›</button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      <style>{`
-        @media (max-width: 860px) {
-          .market-calendar-grid {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
     </section>
   );
 }
@@ -850,10 +784,8 @@ function ToolsGrid({ onNavigate }) {
   return (
     <section style={{ padding: '72px 0' }}>
       <div className="container">
-        <h2 style={{ margin: 0, paddingTop: 24, borderTop: '2px solid var(--fg)', fontSize: 'clamp(28px, 3.5vw, 40px)', letterSpacing: '-0.03em' }}>
-          Yang bisa kamu cek di sini
-        </h2>
-        <ul style={{ listStyle: 'none', margin: '8px 0 0', padding: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 440px), 1fr))', columnGap: 48 }}>
+        <SectionTitle title="Yang bisa kamu cek di sini" />
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 440px), 1fr))', columnGap: 48 }}>
           {TOOLS.map((t) => (
             <li key={t.id} style={{ borderBottom: '1px solid var(--border)' }}>
               <button type="button" onClick={() => onNavigate(t.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 18, padding: '14px 0', textAlign: 'left', font: 'inherit', color: 'var(--fg)', cursor: 'pointer' }}>
@@ -871,582 +803,57 @@ function ToolsGrid({ onNavigate }) {
   );
 }
 
-/* ---------- Guides preview section ---------- */
+/* ---------- Panduan: baris seperti ToolsGrid ---------- */
 const PREVIEW_GUIDES = [
-  { icon: 'book',   tag: 'BASIC',    title: 'Apa itu ARA & ARB?',                 desc: 'Aturan auto-rejection di IDX yang wajib lo ngerti sebelum nge-haka saham gocap.', read: '5 min' },
-  { icon: 'target', tag: 'STRATEGY', title: 'Average Down: Pahlawan atau Jebakan?', desc: 'Kapan boleh average down dan kapan harusnya cut-loss. Spoiler: gak semua bottom itu real bottom.', read: '7 min' },
-  { icon: 'shield', tag: 'RISK',     title: 'Position Sizing 101',                desc: 'Kenapa "all-in" itu cara tercepat buat porto sultan jadi porto receh. Pakai 2% rule.', read: '6 min' },
-  { icon: 'coin',   tag: 'INCOME',   title: 'Bedanya Dividen vs Capital Gain',     desc: 'Dua cara cuan dari saham. Yang satu cair tahunan, yang satu cair pas lo jual.', read: '4 min' },
+  { title: 'Apa itu ARA dan ARB?',             desc: 'Batas naik dan turun harian di IDX, dan kenapa saham gocap bisa mentok.',     read: 5 },
+  { title: 'Average down: kapan masuk akal?',  desc: 'Kapan menambah posisi saat harga turun, dan kapan lebih baik cut loss.',      read: 7 },
+  { title: 'Position sizing',                  desc: 'Kenapa all-in bikin porto cepat habis, dan cara pakai batas rugi 2% per trade.', read: 6 },
+  { title: 'Dividen atau capital gain?',       desc: 'Dua cara untung dari saham: satu cair saat dividen dibagi, satu saat kamu jual.', read: 4 },
 ];
 
 function GuidesSection({ onNavigate }) {
   return (
-    <section
-      style={{
-        padding: '80px 0',
-        background: 'var(--bg-soft)',
-        borderTop: '1px solid var(--border)',
-        borderBottom: '1px solid var(--border)',
-      }}
-    >
+    <section style={{ padding: '72px 0' }}>
       <div className="container">
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-end',
-            marginBottom: 40,
-            flexWrap: 'wrap',
-            gap: 16,
-          }}
-        >
-          <div style={{ maxWidth: 620 }}>
-            <div className="badge" style={{ marginBottom: 16 }}>
-              <Icon name="book" size={12} />
-              <span>BELAJAR DULU, CUAN KEMUDIAN</span>
-            </div>
-            <h2
-              style={{
-                fontSize: 'clamp(32px, 4vw, 44px)',
-                marginBottom: 12,
-                letterSpacing: '-0.03em',
-              }}
-            >
-              Panduan ringkas buat<br />newbie & sultan-in-the-making.
-            </h2>
-            <p style={{ fontSize: 16, color: 'var(--fg-muted)' }}>
-              Bahasa sehari-hari, 5–7 menit baca, langsung praktek di kalkulator.
-            </p>
-          </div>
-          <button className="btn btn-secondary" onClick={() => onNavigate && onNavigate('guides')}>
-            Lihat Semua Panduan
-          </button>
-        </div>
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: 16,
-          }}
-        >
-          {PREVIEW_GUIDES.map((g, i) => (
-            <a
-              key={i}
-              className="card interactive"
-              onClick={() => onNavigate && onNavigate('guides')}
-              style={{
-                padding: 24,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 14,
-                cursor: 'pointer',
-              }}
-            >
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 'var(--radius)',
-                  background: 'var(--primary-soft)',
-                  color: 'var(--primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Icon name={g.icon} size={20} />
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  fontSize: 11,
-                  color: 'var(--fg-muted)',
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                }}
-              >
-                <span>{g.tag}</span>
-                <span>·</span>
-                <span>{g.read}</span>
-              </div>
-              <h3 style={{ fontSize: 18, letterSpacing: '-0.02em' }}>{g.title}</h3>
-              <p
-                style={{
-                  fontSize: 14,
-                  color: 'var(--fg-muted)',
-                  lineHeight: 1.55,
-                  margin: 0,
-                  flexGrow: 1,
-                }}
-              >
-                {g.desc}
-              </p>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: 'var(--primary)',
-                }}
-              >
-                Baca panduan <Icon name="arrow_right" size={12} />
-              </div>
-            </a>
+        <SectionTitle
+          title="Panduan singkat"
+          sub="Bahasa sehari-hari, 4 sampai 7 menit baca, lalu langsung coba di kalkulator."
+          aside={<button className="btn btn-secondary" onClick={() => onNavigate('guides')}>Lihat semua panduan</button>}
+        />
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 440px), 1fr))', columnGap: 48 }}>
+          {PREVIEW_GUIDES.map((g) => (
+            <li key={g.title} style={{ borderBottom: '1px solid var(--border)' }}>
+              <button type="button" onClick={() => onNavigate('guides')} style={{ width: '100%', padding: '16px 0', textAlign: 'left', font: 'inherit', color: 'var(--fg)' }}>
+                <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16 }}>
+                  <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>{g.title}</span>
+                  <span className="mono" style={{ fontSize: 13, color: 'var(--fg-muted)', whiteSpace: 'nowrap' }}>{g.read} menit</span>
+                </span>
+                <span style={{ display: 'block', marginTop: 4, fontSize: 15, lineHeight: 1.5, color: 'var(--fg-muted)' }}>{g.desc}</span>
+              </button>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );
 }
 
-/* ---------- Final CTA — Terminal style ---------- */
-const CTA_TICKER = [
-  { label: 'IHSG',  val: '+0.32%', up: true  },
-  { label: 'BBCA',  val: '+0.26%', up: true  },
-  { label: 'BBRI',  val: '-0.40%', up: false },
-  { label: 'BMRI',  val: '+1.20%', up: true  },
-  { label: 'TLKM',  val: '-0.15%', up: false },
-  { label: 'ANTM',  val: '+2.10%', up: true  },
-  { label: 'GOTO',  val: '-1.30%', up: false },
-  { label: 'BUMI',  val: '+0.85%', up: true  },
-  { label: 'PTBA',  val: '+0.60%', up: true  },
-  { label: 'ADMR',  val: '-0.55%', up: false },
-];
-
+/* ---------- Penutup ---------- */
 function FinalCTA({ onNavigate }) {
   return (
-    <section style={{ padding: '88px 0' }}>
+    <section style={{ padding: '72px 0 96px' }}>
       <div className="container">
-        <div className="cta-terminal" style={{
-          borderRadius: 'var(--radius-lg)',
-          overflow: 'hidden',
-          border: '1px solid rgba(255,255,255,0.07)',
-          background: 'var(--cta-terminal-bg)',
-          position: 'relative',
-        }}>
-
-          {/* Status bar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            padding: '11px 24px',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
-            fontFamily: 'JetBrains Mono, IBM Plex Mono, monospace',
-            fontSize: 11,
-          }}>
-            <span style={{
-              width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-              background: 'var(--primary)',
-              boxShadow: '0 0 8px color-mix(in oklab, var(--primary) 60%, transparent)',
-            }} />
-            <span style={{ color: 'rgba(255,255,255,0.25)', letterSpacing: '0.12em' }}>
-              CUANMETER_TERMINAL
-            </span>
-            <span style={{ color: 'rgba(255,255,255,0.1)', margin: '0 4px' }}>·</span>
-            <span style={{ color: 'var(--primary)', opacity: 0.6, letterSpacing: '0.08em', fontSize: 10 }}>
-              IDX LIVE
-            </span>
-            <span style={{
-              marginLeft: 'auto', color: 'rgba(255,255,255,0.12)',
-              fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.06em',
-            }}>
-              v1.0.0
-            </span>
-          </div>
-
-          {/* Main body */}
-          <div style={{
-            padding: 'clamp(36px, 5vw, 72px) clamp(24px, 5vw, 64px)',
-            textAlign: 'center',
-            position: 'relative',
-          }}>
-
-            {/* Terminal prompt */}
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              fontFamily: 'JetBrains Mono, IBM Plex Mono, monospace',
-              fontSize: 12, letterSpacing: '0.06em',
-              color: 'var(--primary)',
-              marginBottom: 20, opacity: 0.85,
-            }}>
-              <span style={{ opacity: 0.5 }}>{'$'}</span>
-              <span>exit nebak_mode</span>
-              <span style={{ animation: 'ctaCursorBlink 1.1s step-end infinite' }}>▌</span>
-            </div>
-
-            <h2 style={{
-              fontSize: 'clamp(34px, 5vw, 62px)',
-              color: '#fff',
-              marginBottom: 18,
-              letterSpacing: '-0.04em',
-              lineHeight: 0.97,
-            }}>
-              Stop nebak-nebak.<br />
-              <span style={{ color: 'var(--primary)' }}>Mulai ngitung.</span>
-            </h2>
-
-            <p style={{
-              fontSize: 14,
-              color: 'rgba(255,255,255,0.38)',
-              maxWidth: 460,
-              margin: '0 auto 36px',
-              lineHeight: 1.7,
-              fontFamily: 'JetBrains Mono, IBM Plex Mono, monospace',
-              letterSpacing: '-0.01em',
-            }}>
-              // 5 kalkulator · 1 web · free forever<br />
-              // bookmark sekarang, gas pas market open
-            </p>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
-              <button
-                onClick={() => onNavigate('average')}
-                className="btn btn-primary"
-                style={{ color: '#02110a', fontWeight: 800 }}
-              >
-                Mulai Hitung <Icon name="arrow_right" size={16} />
-              </button>
-              <button
-                onClick={() => onNavigate('araarb')}
-                className="btn"
-                style={{
-                  background: 'transparent',
-                  color: 'rgba(255,255,255,0.7)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                }}
-              >
-                Cek ARA/ARB
-              </button>
-            </div>
-          </div>
-
-          {/* Bottom ticker strip */}
-          <div style={{
-            borderTop: '1px solid rgba(255,255,255,0.06)',
-            padding: '9px 0',
-            overflow: 'hidden',
-          }}>
-            <div style={{
-              display: 'flex',
-              width: 'max-content',
-              fontFamily: 'JetBrains Mono, IBM Plex Mono, monospace',
-              fontSize: 11,
-              animation: 'ctaTicker 28s linear infinite',
-            }}>
-              {[...CTA_TICKER, ...CTA_TICKER].map((item, i) => (
-                <span key={i} style={{
-                  padding: '0 18px',
-                  color: item.up
-                    ? 'color-mix(in oklab, var(--primary) 85%, white)'
-                    : 'rgba(255,84,112,0.85)',
-                  borderRight: '1px solid rgba(255,255,255,0.05)',
-                  letterSpacing: '0.04em',
-                  whiteSpace: 'nowrap',
-                }}>
-                  {item.label} <span style={{ opacity: 0.6 }}>{item.val}</span>
-                </span>
-              ))}
-            </div>
+        <div style={{ paddingTop: 24, borderTop: '2px solid var(--fg)' }}>
+          <h2 style={{ fontSize: 'clamp(36px, 5vw, 60px)', letterSpacing: '-0.045em', lineHeight: 1 }}>Hitung dulu, baru beli.</h2>
+          <p style={{ margin: '16px 0 0', maxWidth: '48ch', fontSize: 18, lineHeight: 1.55, color: 'var(--fg-muted)' }}>
+            Semua kalkulator gratis, tanpa iklan, dan tanpa daftar akun.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 28 }}>
+            <button className="btn btn-primary" onClick={() => onNavigate('profit')}>Hitung profit</button>
+            <button className="btn btn-secondary" onClick={() => onNavigate('araarb')}>Cek ARA dan ARB</button>
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes ctaCursorBlink {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0; }
-        }
-        @keyframes ctaTicker {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-      `}</style>
-    </section>
-  );
-}
-
-/* ---------- ProductShowcase — animated 4-panel demo (Kalkulator · Live · Arena · Analyzer) ---------- */
-const SHOWCASE_TABS = [
-  { id: 'calc',     label: 'Kalkulator', route: 'average',  dot: 'var(--primary)' },
-  { id: 'live',     label: 'Live Price', route: 'heatmap',  dot: 'var(--warning)' },
-  { id: 'arena',    label: 'Arena FO',   route: 'arena',    dot: 'var(--danger)' },
-  { id: 'analyzer', label: 'Analyzer',   route: 'analyzer', dot: '#6366f1' },
-];
-
-const SHOWCASE_LIVE = [
-  { t: 'BBCA', p: 9875, c: 1.8 },
-  { t: 'TLKM', p: 2890, c: -0.7 },
-  { t: 'ANTM', p: 1545, c: 2.4 },
-  { t: 'GOTO', p: 64,   c: -1.5 },
-];
-const SHOWCASE_BIDS = [{ px: 1545, lot: 1200 }, { px: 1540, lot: 860 }, { px: 1535, lot: 540 }];
-const SHOWCASE_ASKS = [{ px: 1550, lot: 980 }, { px: 1555, lot: 1340 }, { px: 1560, lot: 720 }];
-const SHOWCASE_AVG_TARGET = 4350;
-
-function ShowcasePanel({ tab, count }) {
-  if (tab === 'calc') {
-    return (
-      <div className="pshow-rows">
-        <div className="pshow-line"><span>Beli #1</span><span className="mono tnum">4.500 × 10 lot</span></div>
-        <div className="pshow-line"><span>Beli #2</span><span className="mono tnum">4.200 × 10 lot</span></div>
-        <div className="pshow-divider" />
-        <div className="pshow-result">
-          <span className="pshow-result-lbl">Harga rata-rata</span>
-          <span className="mono tnum pshow-result-val">Rp {count.toLocaleString('id-ID')}</span>
-        </div>
-        <div className="pshow-badge pshow-badge-up mono tnum">Floating +3,4% ▲</div>
-      </div>
-    );
-  }
-  if (tab === 'live') {
-    return (
-      <div className="pshow-rows">
-        {SHOWCASE_LIVE.map((r) => {
-          const up = r.c >= 0;
-          return (
-            <div key={r.t} className="pshow-live-row">
-              <span className="pshow-tk mono">{r.t}</span>
-              <span className="mono tnum pshow-live-px">{r.p.toLocaleString('id-ID')}</span>
-              <span className={`pshow-chip mono tnum ${up ? 'pshow-chip-up' : 'pshow-chip-dn'}`}>
-                {up ? '+' : ''}{r.c.toFixed(1)}% {up ? '▲' : '▼'}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-  if (tab === 'arena') {
-    const maxLot = 1340;
-    return (
-      <div className="pshow-book">
-        {SHOWCASE_ASKS.slice().reverse().map((a) => (
-          <div key={a.px} className="pshow-book-row">
-            <span className="mono tnum pshow-book-lot">{a.lot.toLocaleString('id-ID')}</span>
-            <div className="pshow-book-track"><div className="pshow-book-bar pshow-bar-sell" style={{ width: `${(a.lot / maxLot) * 100}%` }} /></div>
-            <span className="mono tnum pshow-book-px pshow-px-sell">{a.px}</span>
-          </div>
-        ))}
-        <div className="pshow-book-mid mono tnum">spread 5 · last 1.548 ▲</div>
-        {SHOWCASE_BIDS.map((b) => (
-          <div key={b.px} className="pshow-book-row">
-            <span className="mono tnum pshow-book-lot">{b.lot.toLocaleString('id-ID')}</span>
-            <div className="pshow-book-track"><div className="pshow-book-bar pshow-bar-buy" style={{ width: `${(b.lot / maxLot) * 100}%` }} /></div>
-            <span className="mono tnum pshow-book-px pshow-px-buy">{b.px}</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-  // analyzer
-  return (
-    <div className="pshow-rows">
-      <div className="pshow-signal">
-        <span className="pshow-signal-tag">SINYAL</span>
-        <span className="pshow-signal-val">BUY</span>
-        <span className="mono tnum pshow-signal-score">skor {count > 72 ? 72 : count}/100</span>
-      </div>
-      <div className="pshow-gauge"><div className="pshow-gauge-fill" style={{ width: `${(count > 72 ? 72 : count)}%` }} /></div>
-      <div className="pshow-line"><span>Net asing</span><span className="mono tnum pshow-up">+Rp 4,2 M ▲</span></div>
-      <div className="pshow-line"><span>Akumulasi 5 hari</span><span className="mono tnum pshow-up">+12,8% ▲</span></div>
-    </div>
-  );
-}
-
-function ProductShowcase({ onNavigate }) {
-  const [active, setActive] = useStateL(0);
-  const [count, setCount] = useStateL(0);
-  const [inView, setInView] = useStateL(false);
-  const [paused, setPaused] = useStateL(false);
-  const ref = React.useRef(null);
-
-  const onTabKey = (e) => {
-    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-    e.preventDefault();
-    setPaused(true);
-    const n = SHOWCASE_TABS.length;
-    setActive((a) => (e.key === 'ArrowRight' ? (a + 1) % n : (a - 1 + n) % n));
-  };
-  const reduce = typeof window !== 'undefined' && window.matchMedia
-    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // Reveal on scroll
-  useEffectL(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => { if (e.isIntersecting) setInView(true); });
-    }, { threshold: 0.3 });
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  // Auto-advance tabs once visible (skip when reduced motion)
-  useEffectL(() => {
-    if (!inView || reduce || paused) return;
-    const id = setInterval(() => setActive((a) => (a + 1) % SHOWCASE_TABS.length), 2500);
-    return () => clearInterval(id);
-  }, [inView, reduce, paused]);
-
-  // Count-up target depends on active panel
-  useEffectL(() => {
-    const target = SHOWCASE_TABS[active].id === 'calc' ? SHOWCASE_AVG_TARGET
-      : SHOWCASE_TABS[active].id === 'analyzer' ? 72 : 0;
-    if (!target) { setCount(0); return; }
-    if (reduce) { setCount(target); return; }
-    let raf, start;
-    const step = (ts) => {
-      if (!start) start = ts;
-      const p = Math.min(1, (ts - start) / 700);
-      setCount(Math.round(target * (1 - Math.pow(1 - p, 3))));
-      if (p < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [active, reduce]);
-
-  const tab = SHOWCASE_TABS[active];
-
-  return (
-    <section className="pshow-section" ref={ref}>
-      <div className="container">
-        <div className={`pshow-head ${inView ? 'pshow-in' : ''}`}>
-          <div className="badge" style={{ marginBottom: 14 }}>
-            <Icon name="chart" size={12} />
-            <span>LIHAT LANGSUNG · DEMO</span>
-          </div>
-          <h2 className="pshow-title">Semua alat, <span style={{ color: 'var(--primary)' }}>satu layar.</span></h2>
-          <p className="pshow-sub">Kalkulator, harga live, simulasi Arena FO, sampai Analyzer — gerak beneran, bukan screenshot.</p>
-        </div>
-
-        <div
-          className={`pshow-frame ${inView ? 'pshow-in' : ''}`}
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-          onFocusCapture={() => setPaused(true)}
-          onBlurCapture={() => setPaused(false)}
-        >
-          <div className="pshow-tabs" role="tablist" aria-label="Demo fitur Sahamath">
-            {SHOWCASE_TABS.map((t, i) => (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                id={`pshow-tab-${t.id}`}
-                aria-selected={i === active}
-                aria-controls="pshow-tabpanel"
-                tabIndex={i === active ? 0 : -1}
-                className={`pshow-tab ${i === active ? 'pshow-tab-active' : ''}`}
-                onClick={() => { setPaused(true); setActive(i); }}
-                onKeyDown={onTabKey}
-              >
-                <span className="pshow-tab-dot" style={{ background: t.dot }} aria-hidden="true" />
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="pshow-screen">
-            <div
-              key={active}
-              className="pshow-panel"
-              role="tabpanel"
-              id="pshow-tabpanel"
-              aria-labelledby={`pshow-tab-${tab.id}`}
-              tabIndex={0}
-            >
-              <ShowcasePanel tab={tab.id} count={count} />
-            </div>
-          </div>
-
-          <div className="pshow-foot">
-            <div className="pshow-progress">
-              {SHOWCASE_TABS.map((t, i) => (
-                <span key={t.id} className={`pshow-pip ${i === active ? 'pshow-pip-on' : ''}`} />
-              ))}
-            </div>
-            <button type="button" className="btn btn-primary pshow-cta" onClick={() => onNavigate && onNavigate(tab.route)}>
-              Buka {tab.label} →
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <style>{`
-        .pshow-section { padding: 72px 0; }
-        .pshow-head { max-width: 640px; margin: 0 auto; text-align: center; opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s ease; }
-        .pshow-head.pshow-in { opacity: 1; transform: none; }
-        .pshow-title { font-size: clamp(28px, 4vw, 42px); letter-spacing: -0.025em; margin: 0 0 10px; }
-        .pshow-sub { font-size: 16px; color: var(--fg-muted); margin: 0 0 28px; line-height: 1.5; }
-        .pshow-frame {
-          max-width: 540px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border);
-          border-radius: 20px; overflow: hidden; box-shadow: 0 24px 60px -24px rgba(0,0,0,0.35);
-          opacity: 0; transform: translateY(28px) scale(0.98); transition: opacity .6s ease, transform .6s ease;
-        }
-        .pshow-frame.pshow-in { opacity: 1; transform: none; }
-        .pshow-tabs { display: flex; gap: 4px; padding: 10px; background: var(--surface-2); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-        .pshow-tab {
-          display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; border-radius: 10px;
-          font-size: 13px; font-weight: 700; color: var(--fg-muted); background: transparent; cursor: pointer;
-          border: 1px solid transparent;
-          transition-property: background-color, color, border-color; transition-duration: 180ms; transition-timing-function: ease-out;
-        }
-        .pshow-tab:hover { color: var(--fg); }
-        .pshow-tab-active { background: var(--surface); color: var(--fg); border-color: var(--border); }
-        .pshow-tab-dot { width: 8px; height: 8px; border-radius: 50%; }
-        .pshow-screen { padding: 24px; min-height: 232px; display: flex; align-items: stretch; }
-        .pshow-panel { width: 100%; animation: pshowPanel .45s cubic-bezier(0.22,1,0.36,1); }
-        @keyframes pshowPanel { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-        .pshow-rows { display: flex; flex-direction: column; gap: 12px; width: 100%; }
-        .pshow-line { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--fg-muted); }
-        .pshow-divider { height: 1px; background: var(--border); margin: 2px 0; }
-        .pshow-result { display: flex; justify-content: space-between; align-items: baseline; }
-        .pshow-result-lbl { font-size: 13px; font-weight: 700; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-        .pshow-result-val { font-size: 26px; font-weight: 800; color: var(--fg); }
-        .pshow-badge { align-self: flex-start; padding: 5px 12px; border-radius: 999px; font-size: 13px; font-weight: 800; }
-        .pshow-badge-up { background: color-mix(in oklab, var(--success) 16%, transparent); color: var(--success); }
-        .pshow-live-row { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
-        .pshow-live-row:last-child { border-bottom: 0; }
-        .pshow-tk { font-weight: 800; font-size: 15px; color: var(--fg); }
-        .pshow-live-px { font-size: 15px; font-weight: 700; color: var(--fg); }
-        .pshow-chip { padding: 3px 9px; border-radius: 7px; font-size: 12px; font-weight: 800; animation: pshowPulse 2.4s ease-in-out infinite; }
-        .pshow-chip-up { background: color-mix(in oklab, var(--success) 15%, transparent); color: var(--success); }
-        .pshow-chip-dn { background: color-mix(in oklab, var(--danger) 15%, transparent); color: var(--danger); }
-        @keyframes pshowPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
-        .pshow-book { display: flex; flex-direction: column; gap: 5px; width: 100%; }
-        .pshow-book-row { display: grid; grid-template-columns: 64px 1fr 56px; gap: 10px; align-items: center; }
-        .pshow-book-lot { font-size: 12px; color: var(--fg-muted); text-align: right; }
-        .pshow-book-track { height: 18px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
-        .pshow-book-bar { height: 100%; border-radius: 5px; transform-origin: left; animation: pshowBar .6s cubic-bezier(0.22,1,0.36,1); }
-        @keyframes pshowBar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-        .pshow-bar-buy { background: color-mix(in oklab, var(--success) 55%, transparent); }
-        .pshow-bar-sell { background: color-mix(in oklab, var(--danger) 55%, transparent); }
-        .pshow-book-px { font-size: 13px; font-weight: 700; }
-        .pshow-px-buy { color: var(--success); }
-        .pshow-px-sell { color: var(--danger); }
-        .pshow-book-mid { text-align: center; font-size: 11px; color: var(--fg-faint); padding: 4px 0; letter-spacing: 0.04em; }
-        .pshow-signal { display: flex; align-items: baseline; gap: 12px; }
-        .pshow-signal-tag { font-size: 11px; font-weight: 800; color: var(--fg-faint); letter-spacing: 0.08em; }
-        .pshow-signal-val { font-size: 30px; font-weight: 900; color: var(--success); }
-        .pshow-signal-score { font-size: 13px; color: var(--fg-muted); margin-left: auto; }
-        .pshow-gauge { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
-        .pshow-gauge-fill { height: 100%; background: linear-gradient(90deg, var(--warning), var(--success)); border-radius: 999px; transition: width .2s linear; }
-        .pshow-up { color: var(--success); font-weight: 700; }
-        .pshow-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 16px; border-top: 1px solid var(--border); background: var(--surface-2); }
-        .pshow-progress { display: flex; gap: 6px; }
-        .pshow-pip { width: 22px; height: 4px; border-radius: 999px; background: var(--border); transition: background-color .3s ease; }
-        .pshow-pip-on { background: var(--primary); }
-        .pshow-cta { font-size: 14px; font-weight: 700; padding: 9px 18px; }
-        @media (max-width: 600px) { .pshow-foot { flex-direction: column; align-items: stretch; } .pshow-cta { width: 100%; } }
-        @media (prefers-reduced-motion: reduce) {
-          .pshow-head, .pshow-frame { opacity: 1 !important; transform: none !important; transition: none; }
-          .pshow-panel, .pshow-book-bar, .pshow-chip { animation: none !important; }
-        }
-      `}</style>
     </section>
   );
 }
@@ -1481,20 +888,12 @@ function IpoNewsWidget() {
   return (
     <section className="ipo-sec" style={{ padding: '64px 0' }}>
       <div className="container">
-        <div style={{ marginBottom: 24, maxWidth: 640 }}>
-          <div className="badge" style={{ marginBottom: 12 }}>
-            <Icon name="chart" size={12} />
-            <span>{isRssAlert ? 'PASAR PRIMER - ALERT IPO' : 'PASAR PRIMER - KALENDER IPO'}</span>
-          </div>
-          <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', letterSpacing: '-0.025em', marginBottom: 8 }}>
-            IPO di <span style={{ color: 'var(--primary)' }}>BEI</span>.
-          </h2>
-          <p style={{ fontSize: 15, color: 'var(--fg-muted)', margin: 0 }}>
-            {isRssAlert
-              ? 'Pantauan berita IPO terbaru dari RSS. Anggap sebagai alert awal, lalu verifikasi prospektus/e-IPO.'
-              : 'Jadwal book building, penawaran, dan pencatatan emiten baru dari data curated e-IPO.'}
-          </p>
-        </div>
+        <SectionTitle
+          title="IPO di BEI"
+          sub={isRssAlert
+            ? 'Pantauan berita IPO terbaru dari RSS. Anggap sebagai alert awal, lalu verifikasi prospektus/e-IPO.'
+            : 'Jadwal book building, penawaran, dan pencatatan emiten baru dari data curated e-IPO.'}
+        />
 
         <div className="ipo-grid">
           {data.items.map((it) => {
@@ -1508,7 +907,7 @@ function IpoNewsWidget() {
                     {it.logo ? <img src={it.logo} alt={it.code} loading="lazy" /> : <Icon name="chart" size={22} />}
                   </div>
                   <span className="ipo-tag" style={{ color: sc, background: `color-mix(in oklab, ${sc} 14%, transparent)` }}>
-                    {it.unverified ? 'RSS ALERT' : (it.stage || 'IPO').toUpperCase()}
+                    {it.unverified ? 'Alert RSS' : it.stage || 'IPO'}
                   </span>
                 </div>
 
@@ -1569,13 +968,13 @@ function IpoNewsWidget() {
         .ipo-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
         .ipo-logo-box { width: 52px; height: 52px; border-radius: var(--radius); background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
         .ipo-logo-box img { max-width: 40px; max-height: 40px; object-fit: contain; }
-        .ipo-tag { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; padding: 4px 8px; border-radius: 6px; white-space: nowrap; }
+        .ipo-tag { font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 6px; white-space: nowrap; }
         .ipo-name { font-size: 18px; margin: 0; letter-spacing: -0.02em; line-height: 1.25; min-height: 2.3em; }
         .ipo-idline { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
         .ipo-code { font-size: 12px; font-weight: 800; color: var(--fg-muted); }
         .ipo-syariah { font-size: 10px; font-weight: 800; color: #fff; background: var(--success); padding: 2px 8px; border-radius: 5px; }
         .ipo-hero { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
-        .ipo-hero-label { font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--fg-muted); }
+        .ipo-hero-label { font-size: 12px; font-weight: 600; color: var(--fg-muted); }
         .ipo-price { font-size: 21px; font-weight: 800; color: var(--fg); letter-spacing: -0.01em; margin-top: 2px; line-height: 1.1; }
         .ipo-date { font-size: 12px; color: var(--fg-muted); margin-top: 8px; }
         .ipo-date-label { font-weight: 700; color: var(--fg); }
@@ -1594,7 +993,6 @@ function LandingPage({ onNavigate }) {
   return (
     <>
       <Hero onNavigate={onNavigate} />
-      <ProductShowcase onNavigate={onNavigate} />
       <StockMarquee />
       <WatchlistWidget onNavigate={onNavigate} />
       <IHSGChart />
