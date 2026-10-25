@@ -84,8 +84,15 @@ function transformOne(relPath) {
   return result.code;
 }
 
+// React UMD (devDependency, versi sama dengan dev index.html) ikut di awal bundle: satu file
+// dari origin sendiri, tanpa koneksi DNS+TLS tambahan ke unpkg sebelum halaman bisa tampil.
+const REACT_UMD = [
+  'node_modules/react/umd/react.production.min.js',
+  'node_modules/react-dom/umd/react-dom.production.min.js',
+];
+
 function buildBundle() {
-  const parts = [];
+  const parts = REACT_UMD.map((rel) => fs.readFileSync(path.join(rootDir, rel), 'utf8') + '\n;');
   for (const rel of SCRIPT_ORDER) {
     parts.push(`/* ${rel} */`);
     parts.push(transformOne(rel));
@@ -106,9 +113,7 @@ function buildIndexHtml() {
   const head = html.slice(0, start);
   const tail = html.slice(bodyEnd);
   const prodScripts = [
-    '  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>',
-    '  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>',
-    `  <script src="${BUNDLE_REL}"></script>`,
+    `  <script src="${BUNDLE_REL}"></script>`, // React sudah di dalam bundle (REACT_UMD)
     '',
   ].join('\n');
   return head + prodScripts + tail;

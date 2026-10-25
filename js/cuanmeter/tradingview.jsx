@@ -43,10 +43,22 @@ function clearNode(node) {
    Re-mounts whenever widget name or stringified config changes. */
 function TVWidget({ widget, config, height = 'auto', className }) {
   const ref = useRefTV(null);
+  // Embed baru dimuat saat mendekati layar: widget di bawah lipatan (chart IHSG di landing)
+  // tidak berebut bandwidth dan CPU dengan konten utama di HP.
+  const [near, setNear] = useStateTV(false);
+
+  useEffectTV(() => {
+    const el = ref.current;
+    if (!el || near) return undefined;
+    if (!('IntersectionObserver' in window)) { setNear(true); return undefined; }
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) setNear(true); }, { rootMargin: '300px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [near]);
 
   useEffectTV(() => {
     const container = ref.current;
-    if (!container) return undefined;
+    if (!container || !near) return undefined;
 
     clearNode(container);
 
@@ -64,7 +76,7 @@ function TVWidget({ widget, config, height = 'auto', className }) {
     return () => {
       if (container) clearNode(container);
     };
-  }, [widget, JSON.stringify(config)]);
+  }, [near, widget, JSON.stringify(config)]);
 
   return (
     <div
