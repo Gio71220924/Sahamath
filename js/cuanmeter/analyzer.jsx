@@ -15,12 +15,11 @@ const SCREENER_TICKERS = [
 
 /* ---------- ML Plan Chart — real candles + entry/TP/SL lines ---------- */
 function MLPlanChart({ candles, plan }) {
+  const [hover, setHover] = useStateZ(null);
+  const svgRef = useRefZ(null);
   const W = 1000, H = 360, PAD = { t: 16, r: 72, b: 32, l: 12 };
   const n = candles.length;
   if (!n) return null;
-
-  const [hover, setHover] = useStateZ(null);
-  const svgRef = useRefZ(null);
 
   const prices = candles.flatMap((c) => [c.high, c.low]);
   const rawMin = Math.min(...prices, plan.stop_loss, plan.target_profit);
