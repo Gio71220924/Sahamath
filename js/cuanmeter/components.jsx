@@ -604,30 +604,20 @@ function Footer({ onNavigate }) {
               margin: 0,
             }}
           >
-            Kalkulator saham gratis untuk Gen Z trader Indonesia. Hitung average, ARA/ARB,
-            profit, amunisi & dividen — bebas iklan, no drama.
+            Kalkulator saham IDX gratis. Hitung rata-rata, ARA/ARB, profit, amunisi, dan
+            dividen. Tanpa iklan.
           </p>
         </div>
         <div>
-          <h4
-            style={{
-              fontSize: 13,
-              marginBottom: 12,
-              color: 'var(--fg-muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-            }}
-          >
-            Tools
-          </h4>
+          <h4 style={footerHeadStyle}>Kalkulator</h4>
           <ul style={footerListStyle}>
             {[
-              { label: 'Average Price', id: 'average' },
-              { label: 'ARA / ARB',     id: 'araarb' },
-              { label: 'Profit Calc',   id: 'profit' },
-              { label: 'Position Size', id: 'amunisi' },
-              { label: 'Dividen',       id: 'dividen' },
-              { label: 'Analyzer',      id: 'analyzer' },
+              { label: 'Rata-rata', id: 'average' },
+              { label: 'ARA/ARB',   id: 'araarb' },
+              { label: 'Profit',    id: 'profit' },
+              { label: 'Amunisi',   id: 'amunisi' },
+              { label: 'Dividen',   id: 'dividen' },
+              { label: 'Analyzer',  id: 'analyzer' },
             ].map(({ label, id }) => (
               <li key={id}>
                 <button onClick={() => go(id)} className="footer-link">{label}</button>
@@ -636,22 +626,10 @@ function Footer({ onNavigate }) {
           </ul>
         </div>
         <div>
-          <h4
-            style={{
-              fontSize: 13,
-              marginBottom: 12,
-              color: 'var(--fg-muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-            }}
-          >
-            Tentang
-          </h4>
+          <h4 style={footerHeadStyle}>Belajar</h4>
           <ul style={footerListStyle}>
             {[
-              { label: 'Cara Pakai',  id: 'guides' },
-              { label: 'Panduan',     id: 'guides' },
-              { label: 'Analyzer AI', id: 'analyzer' },
+              { label: 'Panduan', id: 'guides' },
             ].map(({ label, id }) => (
               <li key={label}>
                 <button onClick={() => go(id)} className="footer-link">{label}</button>
@@ -673,10 +651,7 @@ function Footer({ onNavigate }) {
         }}
       >
         <span style={{ fontSize: 13, color: 'var(--fg-faint)' }}>
-          © 2026 Sahamath. Bukan ajakan beli/jual.
-        </span>
-        <span style={{ fontSize: 13, color: 'var(--fg-faint)' }}>
-          Made for Indonesian traders 🇮🇩
+          © 2026 Sahamath. Bukan ajakan beli atau jual.
         </span>
       </div>
 
@@ -694,6 +669,8 @@ function Footer({ onNavigate }) {
     </footer>
   );
 }
+
+const footerHeadStyle = { fontSize: 14, marginBottom: 12, color: 'var(--fg-muted)' };
 
 const footerListStyle = {
   padding: 0,

@@ -396,6 +396,15 @@ function formatCalendarEventTitle(event) {
   return `${event.ticker} ${typeLabel}`;
 }
 
+// "2026-10-22", "2026-10-31" → "22–31 Okt"; beda bulan → "28 Okt–3 Nov"
+function formatDateRange(start, end) {
+  const a = new Date(`${start}T00:00:00`);
+  const b = new Date(`${end}T00:00:00`);
+  const dm = { day: 'numeric', month: 'short' };
+  const left = a.getMonth() === b.getMonth() ? a.getDate() : a.toLocaleDateString('id-ID', dm);
+  return `${left}–${b.toLocaleDateString('id-ID', dm)}`;
+}
+
 function getCurrentMonthWeek(date = new Date()) {
   return Math.min(4, Math.max(1, Math.ceil(date.getDate() / 7)));
 }
@@ -488,7 +497,7 @@ function MarketCalendarWidget() {
         }
         setEvents(data.events);
         setUpdatedAt(data.generated_at);
-        setRangeMeta(data.range_start && data.range_end ? `${data.range_start} - ${data.range_end}` : null);
+        setRangeMeta(data.range_start && data.range_end ? formatDateRange(data.range_start, data.range_end) : null);
         setLoadError(data.error && !data.cached ? 'Data KSEI belum lengkap, coba refresh lagi nanti.' : null);
       })
       .catch(() => {
@@ -841,7 +850,7 @@ function GuidesSection({ onNavigate }) {
 /* ---------- Penutup ---------- */
 function FinalCTA({ onNavigate }) {
   return (
-    <section style={{ padding: '72px 0 96px' }}>
+    <section style={{ padding: '72px 0 0' }}>
       <div className="container">
         <div style={{ paddingTop: 24, borderTop: '2px solid var(--fg)' }}>
           <h2 style={{ fontSize: 'clamp(36px, 5vw, 60px)', letterSpacing: '-0.045em', lineHeight: 1 }}>Hitung dulu, baru beli.</h2>
@@ -859,9 +868,19 @@ function FinalCTA({ onNavigate }) {
 }
 
 /* ---------- IpoNewsWidget — feed berita IPO BEI (Google News) ---------- */
+// Logo dari e-ipo.co.id kadang gagal dimuat; jatuh ke ikon biar tidak tampil alt text terpotong.
+function IpoLogo({ src, code }) {
+  const [failed, setFailed] = useStateL(false);
+  if (!src || failed) return <Icon name="chart" size={22} />;
+  return <img src={src} alt={code} loading="lazy" onError={() => setFailed(true)} />;
+}
+
+const IPO_PREVIEW = 4;
+
 function IpoNewsWidget() {
   const [data, setDataIpo] = useStateL(null);
   const [err, setErrIpo] = useStateL(false);
+  const [showAll, setShowAll] = useStateL(false);
 
   useEffectL(() => {
     let alive = true;
@@ -880,10 +899,13 @@ function IpoNewsWidget() {
     if (/book building/.test(s)) return 'var(--warning)';
     if (/offering|penawaran/.test(s)) return 'var(--primary)';
     if (/allotment|penjatahan/.test(s)) return 'var(--warning)';
-    if (/closed|selesai|pencatatan|listing/.test(s)) return 'var(--fg-muted)';
+    if (/closed|selesai|pencatatan|listing|cancel|batal/.test(s)) return 'var(--fg-muted)';
     return 'var(--primary)';
   };
   const isRssAlert = data.source === 'rss';
+  const done = (it) => it.closed || /cancel|batal/i.test(it.stage || '');
+  const items = [...data.items].sort((a, b) => done(a) - done(b)); // yang masih jalan di depan
+  const shown = showAll ? items : items.slice(0, IPO_PREVIEW);
 
   return (
     <section className="ipo-sec" style={{ padding: '64px 0' }}>
@@ -896,15 +918,15 @@ function IpoNewsWidget() {
         />
 
         <div className="ipo-grid">
-          {data.items.map((it) => {
+          {shown.map((it) => {
             const sc = stageColor(it.stage);
             const shortLbl = (l) => (l || '').replace(/\s*(book building|penawaran umum|penawaran)\s*/ig, ' ').replace(/\s+/g, ' ').trim();
             const meta = [it.sector, it.lot].filter(Boolean).join(' - ');
             return (
-              <div key={it.id} className={`card interactive ipo-card${it.closed ? ' ipo-closed' : ''}`}>
+              <div key={it.id} className={`card interactive ipo-card${done(it) ? ' ipo-closed' : ''}`}>
                 <div className="ipo-top">
                   <div className="ipo-logo-box">
-                    {it.logo ? <img src={it.logo} alt={it.code} loading="lazy" /> : <Icon name="chart" size={22} />}
+                    <IpoLogo src={it.logo} code={it.code} />
                   </div>
                   <span className="ipo-tag" style={{ color: sc, background: `color-mix(in oklab, ${sc} 14%, transparent)` }}>
                     {it.unverified ? 'Alert RSS' : it.stage || 'IPO'}
@@ -954,6 +976,12 @@ function IpoNewsWidget() {
             );
           })}
         </div>
+
+        {items.length > IPO_PREVIEW && (
+          <button type="button" className="btn btn-secondary" style={{ marginTop: 16 }} onClick={() => setShowAll(!showAll)}>
+            {showAll ? 'Tampilkan lebih sedikit' : `Tampilkan semua (${items.length})`}
+          </button>
+        )}
 
         {data.disclaimer && (
           <p style={{ marginTop: 16, fontSize: 12, color: 'var(--fg-faint)' }}>{data.disclaimer}</p>

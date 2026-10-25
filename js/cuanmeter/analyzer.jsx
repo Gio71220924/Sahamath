@@ -105,9 +105,9 @@ function MLPlanChart({ candles, plan }) {
       })}
 
       {/* TP / Entry / SL lines */}
-      {hline(plan.target_profit, 'var(--success)', '6 3', 'TP')}
-      {hline(plan.entry, '#4d8fff', '0', 'ENTRY')}
-      {hline(plan.stop_loss, 'var(--danger)', '6 3', 'SL')}
+      {hline(plan.target_profit, 'var(--success)', '6 3', 'Target')}
+      {hline(plan.entry, '#4d8fff', '0', 'Entry')}
+      {hline(plan.stop_loss, 'var(--danger)', '6 3', 'Stop')}
 
       {/* date labels */}
       {dateIdxs.map((i) => (
@@ -187,11 +187,11 @@ function AnalyzerChart({ ticker, mlData, mlLoading }) {
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* legend */}
         <div style={{ display: 'flex', gap: 16, padding: '8px 16px', borderBottom: '1px solid var(--border)', flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--fg)' }}>{ticker} · 60 Hari</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--fg)' }}>{ticker}, 60 hari</span>
           {[
-            { label: 'ENTRY', val: plan.entry,         color: '#4d8fff',        pct: null },
-            { label: 'TP',    val: plan.target_profit, color: 'var(--success)', pct: '+' + plan.tp_percent + '%' },
-            { label: 'SL',    val: plan.stop_loss,     color: 'var(--danger)',  pct: plan.sl_percent + '%' },
+            { label: 'Entry',  val: plan.entry,         color: '#4d8fff',        pct: null },
+            { label: 'Target', val: plan.target_profit, color: 'var(--success)', pct: '+' + plan.tp_percent + '%' },
+            { label: 'Stop',   val: plan.stop_loss,     color: 'var(--danger)',  pct: plan.sl_percent + '%' },
           ].map(({ label, val, color, pct }) => (
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <span style={{ width: 20, height: 2, background: color, display: 'inline-block', borderRadius: 1 }} />
@@ -246,7 +246,7 @@ function StrategyPicker({ strategies, mode, onStrategiesChange, onModeChange }) 
     <div className="card strategy-picker" style={{ marginBottom: 16, padding: '14px 16px' }}>
       <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ flex: 1, minWidth: 220 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--fg-muted)', marginBottom: 10, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--fg-muted)', marginBottom: 10 }}>
             Strategi
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -277,7 +277,7 @@ function StrategyPicker({ strategies, mode, onStrategiesChange, onModeChange }) 
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--fg-muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--fg-muted)' }}>
             Mode
           </div>
           <div style={{ display: 'flex', gap: 4 }}>
@@ -457,9 +457,8 @@ function FundamentalCard({ data, loading }) {
       <div className="fund-head">
         <div>
           <div className="fund-name">{data.name || '—'}</div>
-          <div className="fund-sector">{[data.sector, data.industry].filter(Boolean).join(' · ') || '—'}</div>
+          <div className="fund-sector">{[data.sector, data.industry].filter(Boolean).join(', ') || '—'}</div>
         </div>
-        <span className="badge">FUNDAMENTAL</span>
       </div>
       <div className="fund-grid">
         {metrics.map((m) => (
@@ -475,7 +474,7 @@ function FundamentalCard({ data, loading }) {
           52 minggu: <strong>Rp {data.low52.toLocaleString('id-ID')}</strong> — <strong>Rp {data.high52.toLocaleString('id-ID')}</strong>
         </div>
       )}
-      <div className="fund-disclaimer">Data fundamental dari yfinance · bukan rekomendasi investasi.</div>
+      <div className="fund-disclaimer">Data fundamental dari yfinance, bukan rekomendasi investasi.</div>
     </div>
   );
 }
@@ -490,10 +489,7 @@ const AI_IMPACT = { positif: 'var(--success)', negatif: 'var(--danger)', netral:
 
 function AiAnalysisCard({ data, loading, error, onRetry }) {
   const headerBadge = (
-    <div className="badge" style={{ marginBottom: 0 }}>
-      <Icon name="chart" size={12} />
-      <span>ANALISIS AI · KATALIS & SENTIMEN</span>
-    </div>
+    <h3 style={{ fontSize: 15, color: 'var(--fg-muted)', letterSpacing: 0 }}>Ringkasan berita oleh AI</h3>
   );
 
   let body;
@@ -516,20 +512,20 @@ function AiAnalysisCard({ data, loading, error, onRetry }) {
           <span style={{ fontSize: 13, fontWeight: 800, color: s.color, background: s.bg, padding: '4px 12px', borderRadius: 999 }}>
             {s.glyph} Sentimen {s.label}
           </span>
-          {data.cached && <span style={{ fontSize: 11, color: 'var(--fg-faint)' }}>· dari cache</span>}
+          {data.cached && <span style={{ fontSize: 11, color: 'var(--fg-faint)' }}>dari cache</span>}
         </div>
 
         <p style={{ margin: 0, fontSize: 15, lineHeight: 1.55, color: 'var(--fg)' }}>{a.ringkasan}</p>
 
         {a.katalis && a.katalis.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--fg-muted)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Katalis</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--fg-muted)' }}>Katalis</div>
             {a.katalis.map((k, i) => (
               <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                 <span style={{ marginTop: 6, width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: AI_IMPACT[k.dampak] || 'var(--fg-muted)' }} />
                 <span style={{ fontSize: 14, color: 'var(--fg)', lineHeight: 1.4 }}>
                   {k.judul}
-                  {k.sumber && <span style={{ color: 'var(--fg-faint)' }}> · {k.sumber}</span>}
+                  {k.sumber && <span style={{ color: 'var(--fg-faint)' }}>, {k.sumber}</span>}
                 </span>
               </div>
             ))}
@@ -577,7 +573,7 @@ function PriceRangeCard({ r }) {
   if (!r) return null;
   return (
     <div style={{ marginTop: 10, padding: '12px 14px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 12 }}>
-      <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.08em', color: 'var(--fg-muted)', textTransform: 'uppercase', marginBottom: 6 }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--fg-muted)', marginBottom: 6 }}>
         Kisaran harga {r.horizon} hari (80%)
       </div>
       <div className="mono tnum" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, fontSize: 15, fontWeight: 800 }}>
@@ -846,15 +842,8 @@ function Analyzer({ initialTicker }) {
   return (
     <CalcScreen
       icon="chart"
-      tag="ANALYZER · TEKNIKAL + AI"
-      title={
-        <>
-          Ukur <span style={{ color: 'var(--primary)' }}>risiko</span>
-          <br />
-          per saham IDX.
-        </>
-      }
-      subtitle="Chart, fundamental, katalis AI, plus trading plan (entry/TP/SL) dari ATR. Cek risikonya sebelum lo masuk."
+      title="Ukur risiko per saham IDX."
+      subtitle="Chart, fundamental, katalis dari berita, dan trading plan dari ATR. Cek risikonya sebelum kamu masuk."
     >
       {/* search bar */}
       <div style={{ marginBottom: 24, position: 'relative' }}>
@@ -931,17 +920,8 @@ function Analyzer({ initialTicker }) {
 
       {/* quick tickers */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 800,
-            letterSpacing: '0.08em',
-            color: 'var(--fg-muted)',
-            textTransform: 'uppercase',
-            alignSelf: 'center',
-          }}
-        >
-          POPULER:
+        <span style={{ fontSize: 14, color: 'var(--fg-muted)', alignSelf: 'center' }}>
+          Populer:
         </span>
         {POPULAR_TICKERS.map((t) => (
           <button

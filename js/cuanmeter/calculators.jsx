@@ -76,10 +76,12 @@ function CalcScreen({ icon, tag, title, subtitle, children, className = '' }) {
     <main className={`calculator-screen ${className}`.trim()} style={{ padding: '48px 0 80px' }}>
       <div className="container">
         <div className="fade-up" style={{ marginBottom: 40, maxWidth: 720 }}>
-          <div className="badge" style={{ marginBottom: 16 }}>
-            <Icon name={icon} size={12} />
-            <span>{tag}</span>
-          </div>
+          {tag && (
+            <div className="badge" style={{ marginBottom: 16 }}>
+              <Icon name={icon} size={12} />
+              <span>{tag}</span>
+            </div>
+          )}
           <h1
             style={{
               fontSize: 'clamp(36px, 5vw, 56px)',
