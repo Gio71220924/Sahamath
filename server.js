@@ -2120,6 +2120,12 @@ server.listen(PORT, () => {
     console.log('');
     scheduleDailyCalendarRefresh();
 
+    // Pre-warm kalender: disk Railway kosong tiap deploy, tanpa ini pengunjung pertama
+    // menunggu fetch KSEI (~1 menit, puluhan halaman detail berurutan).
+    loadCalendarCache()
+        .then((c) => console.log(`[Calendar] Cache warm: ${c.events.length} events.`))
+        .catch((e) => console.warn('[Calendar] Warm gagal:', e.message));
+
     // Pre-warm heatmap: load disk cache instantly (serve selama warm jalan), lalu refresh live.
     try {
         if (fs.existsSync(HEATMAP_CACHE_FILE)) {
