@@ -201,7 +201,7 @@ function SectorBlock({ sector, x, y, w, h, onSelect, range, tf }) {
         <span className="heatmap-sector-name">{sector.name}</span>
         {w >= 90 && (
           <span className="heatmap-sector-pct" style={{ color: pctColor }}>
-            {sectorPct >= 0 ? '+' : ''}{sectorPct.toFixed(2)}%
+            {fmt.pct(sectorPct)}
           </span>
         )}
       </div>

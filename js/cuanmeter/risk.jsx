@@ -161,7 +161,7 @@ function AllocationBars({ weights }) {
           <div style={{ flex: 1, height: 22, background: 'var(--surface-2)', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)' }}>
             <div style={{ width: `${(w.weight / max) * 100}%`, height: '100%', background: palette[i % palette.length], borderRadius: 6, transition: 'width .5s ease' }} />
           </div>
-          <span className="mono tnum" style={{ width: 56, textAlign: 'right', fontWeight: 700, fontSize: 14 }}>{w.weight.toFixed(1)}%</span>
+          <span className="mono tnum" style={{ width: 56, textAlign: 'right', fontWeight: 700, fontSize: 14 }}>{fmt.num(w.weight, 1)}%</span>
         </div>
       ))}
     </div>

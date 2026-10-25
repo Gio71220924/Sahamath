@@ -20,16 +20,20 @@ const fmt = {
     isFinite(n)
       ? n.toLocaleString('id-ID', { maximumFractionDigits: dec, minimumFractionDigits: dec })
       : '0',
-  pct: (n, dec = 2) =>
-    isFinite(n) ? (n >= 0 ? '+' : '') + n.toFixed(dec) + '%' : '0%',
+  // Koma desimal Indonesia; tanda dari angka yang ditampilkan (tidak ada "−0,00%")
+  pct: (n, dec = 2) => {
+    if (!isFinite(n)) return '0%';
+    const r = Number(n.toFixed(dec));
+    return (r > 0 ? '+' : '') + fmt.num(r, dec) + '%';
+  },
   compact: (n) => {
     if (!isFinite(n)) return '0';
     const a = Math.abs(n);
-    if (a >= 1e12) return (n / 1e12).toFixed(2) + ' T';
-    if (a >= 1e9)  return (n / 1e9).toFixed(2) + ' M';
-    if (a >= 1e6)  return (n / 1e6).toFixed(2) + ' Jt';
-    if (a >= 1e3)  return (n / 1e3).toFixed(1) + ' rb';
-    return n.toFixed(0);
+    if (a >= 1e12) return fmt.num(n / 1e12, 2) + ' T';
+    if (a >= 1e9)  return fmt.num(n / 1e9, 2) + ' M';
+    if (a >= 1e6)  return fmt.num(n / 1e6, 2) + ' Jt';
+    if (a >= 1e3)  return fmt.num(n / 1e3, 1) + ' rb';
+    return fmt.num(n, 0);
   },
 };
 

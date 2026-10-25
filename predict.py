@@ -351,8 +351,10 @@ def get_prediction(ticker):
             progress=False, auto_adjust=True  # split/div-adjusted so a stock split isn't read as a -95% crash
         )
 
-        if df.empty or len(df) < 30:
-            return {"status": "error", "message": f"Data {ticker} tidak cukup (< 30 hari)."}
+        if df.empty:
+            return {"status": "error", "message": f"Kode {ticker} tidak ditemukan di BEI. Periksa lagi kodenya."}
+        if len(df) < 30:
+            return {"status": "error", "message": f"Data {ticker} baru {len(df)} hari bursa, butuh minimal 30 hari (saham baru tercatat?)."}
 
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)

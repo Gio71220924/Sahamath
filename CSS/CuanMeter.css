@@ -2325,6 +2325,7 @@ body[data-theme="dark"] .arena-mini-seg button.on {
 }
 .paper-sumbox span { font-size: 11px; color: var(--fg-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
 .paper-sumbox strong { font-size: 20px; font-weight: 800; color: var(--fg); font-variant-numeric: tabular-nums; }
+.paper-sumbox small { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .paper-sum-actions { display: flex; align-items: center; gap: 10px; }
 .paper-fee-toggle { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--fg-muted); cursor: pointer; }
 .paper-reset { font-size: 12px; padding: 6px 12px; }

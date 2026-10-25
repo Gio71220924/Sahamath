@@ -243,7 +243,7 @@ function StockMarquee() {
             fontSize: 11, fontWeight: 700,
             color: pos ? 'var(--success)' : 'var(--danger)',
           }}>
-            {pos ? '+' : ''}{item.pct.toFixed(2)}%
+            {fmt.pct(item.pct)}
           </span>
         )}
       </div>

@@ -58,7 +58,7 @@ function IHSGFloater({ compact = false }) {
           </span>
           {data && (
             <span style={{ fontSize: 11, fontWeight: 700, color }}>
-              {up ? '+' : ''}{data.change_pct.toFixed(2)}%
+              {fmt.pct(data.change_pct)}
             </span>
           )}
         </div>

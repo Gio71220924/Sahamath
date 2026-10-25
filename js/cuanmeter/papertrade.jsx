@@ -161,7 +161,7 @@ function TradeModal({ ticker, price, mode, held, onClose }) {
         <div className="paper-calc">
           <div><span>Lembar</span><span>{shares.toLocaleString('id-ID')}</span></div>
           <div><span>Nilai</span><span>{fmtRp(value)}</span></div>
-          {s.feeOn && <div><span>Fee ({(feeRate * 100).toFixed(2)}%)</span><span>{fmtRp(fee)}</span></div>}
+          {s.feeOn && <div><span>Fee ({fmt.num(feeRate * 100, 2)}%)</span><span>{fmtRp(fee)}</span></div>}
           <div className="paper-calc-total"><span>{mode === 'buy' ? 'Total bayar' : 'Terima bersih'}</span><span>{fmtRp(total)}</span></div>
         </div>
         {(err || limitError) && <div className="paper-modal-err">{err || limitError}</div>}
@@ -240,7 +240,9 @@ function PaperTradePage({ onNavigate }) {
       <div className="paper-summary">
         <div className="paper-sumbox"><span>Cash</span><strong>{fmtRpShort(s.cash)}</strong></div>
         <div className="paper-sumbox"><span>Nilai Portfolio</span><strong>{fmtRpShort(totalValue)}</strong></div>
-        <div className="paper-sumbox"><span>Total P&L</span><strong className={totalPL >= 0 ? 'paper-up' : 'paper-dn'}>{totalPL >= 0 ? '+' : ''}{totalPL.toFixed(2)}%</strong></div>
+        <div className="paper-sumbox"><span>Total P&L</span><strong className={totalPL >= 0 ? 'paper-up' : 'paper-dn'}>{fmt.pct(totalPL)}</strong>
+          {/* rupiah juga: rugi kecil karena fee (mis. Rp 1.257) hilang di persen 2 desimal */}
+          <small className={totalPL >= 0 ? 'paper-up' : 'paper-dn'}>{(totalValue - s.initial > 0 ? '+' : '') + fmt.rp(Math.round(totalValue - s.initial))}</small></div>
         <div className="paper-sum-actions">
           <label className="paper-fee-toggle"><input type="checkbox" checked={s.feeOn} onChange={(e) => setPaperFee(e.target.checked)} /> Fee</label>
           <button type="button" className="btn btn-secondary paper-reset" onClick={doReset}>↺ Reset</button>
@@ -279,7 +281,7 @@ function PaperTradePage({ onNavigate }) {
                 <span>{h.lot}</span>
                 <span>{fmtRp(h.avg)}</span>
                 <span>{px != null ? fmtRp(px) : '…'}</span>
-                <span className={up ? 'paper-up' : 'paper-dn'}>{up ? '+' : ''}{plPct.toFixed(2)}%</span>
+                <span className={up ? 'paper-up' : 'paper-dn'}>{fmt.pct(plPct)}</span>
                 <button type="button" className="paper-sellbtn" onClick={(e) => { e.stopPropagation(); openSell(t); }}>Jual</button>
               </div>
             );

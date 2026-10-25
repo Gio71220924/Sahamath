@@ -522,6 +522,11 @@ function ARAARB() {
             prefix="Rp"
             hint="Harga penutupan / referensi hari sebelumnya"
           />
+          {Number(price) > 0 && Number(price) < 50 && (
+            <p role="alert" style={{ margin: 0, fontSize: 13, color: 'var(--danger)' }}>
+              Harga minimum saham di bursa Rp 50. Periksa lagi harganya.
+            </p>
+          )}
 
           {/* Papan selector */}
           <div>
@@ -972,8 +977,13 @@ function Amunisi() {
               <strong className="mono" style={{ color: 'var(--danger)' }}>
                 −Rp {result.riskPerShare.toLocaleString('id-ID')}
               </strong>{' '}
-              ({result.riskPctEntry.toFixed(2)}% dari entry)
+              ({fmt.pct(result.riskPctEntry, 2).replace('+', '')} dari entry)
             </div>
+          )}
+          {Number(entry) > 0 && Number(stop) > 0 && result.riskPerShare <= 0 && (
+            <p role="alert" style={{ margin: 0, fontSize: 13, color: 'var(--danger)' }}>
+              Stop loss harus di bawah harga entry. Untuk posisi beli, stop loss adalah harga jual rugi saat harga turun.
+            </p>
           )}
         </div>
 
@@ -1016,7 +1026,7 @@ function Amunisi() {
             />
             <ResultStat
               label="% Modal Terpakai"
-              value={result.pctOfModal.toFixed(1) + '%'}
+              value={fmt.num(result.pctOfModal, 1) + '%'}
               hint="Sisanya simpan"
             />
           </div>
@@ -1058,10 +1068,10 @@ function Amunisi() {
               }}
             >
               <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
-                ● Trade aktif {result.pctOfModal.toFixed(1)}%
+                ● Trade aktif {fmt.num(result.pctOfModal, 1)}%
               </span>
               <span style={{ color: 'var(--fg-muted)', fontWeight: 700 }}>
-                ○ Cash {(100 - result.pctOfModal).toFixed(1)}%
+                ○ Cash {fmt.num(100 - result.pctOfModal, 1)}%
               </span>
             </div>
           </div>
@@ -1176,10 +1186,10 @@ function Dividen() {
               className="mono tnum"
               style={{ fontSize: 60, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }}
             >
-              <AnimatedNumber value={result.netYieldPct} format={(n) => n.toFixed(2) + '%'} />
+              <AnimatedNumber value={result.netYieldPct} format={(n) => fmt.num(n, 2) + '%'} />
             </div>
             <div style={{ fontSize: 14, opacity: 0.9, marginTop: 12 }}>
-              Yield kotor {result.grossYieldPct.toFixed(2)}%, sebelum PPh 10%
+              Yield kotor {fmt.num(result.grossYieldPct, 2)}%, sebelum PPh 10%
             </div>
           </div>
 

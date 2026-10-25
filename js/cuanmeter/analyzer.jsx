@@ -998,7 +998,7 @@ function Analyzer({ initialTicker }) {
             </span>
             {tvPrice && (
               <span style={{ fontSize: 13, fontWeight: 700, color: tvPrice.change_pct >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                {tvPrice.change_pct >= 0 ? '+' : ''}{tvPrice.change_pct?.toFixed(2)}%
+                {fmt.pct(tvPrice.change_pct)}
               </span>
             )}
             <span style={{ fontSize: 11, color: 'var(--fg-faint)', fontWeight: 600 }}>
@@ -1063,7 +1063,7 @@ function Analyzer({ initialTicker }) {
                   { label: 'MFI',       value: mlData.indicators?.mfi != null ? mlData.indicators.mfi.toFixed(1) : '—' },
                   { label: 'Vol Ratio', value: mlData.indicators?.vol_ratio != null ? mlData.indicators.vol_ratio.toFixed(2) + 'x' : '—' },
                   { label: 'IHSG',      value: mlData.market?.regime ?? '—' },
-                  { label: 'RS IHSG',   value: mlData.market?.relative_strength_20d != null ? (mlData.market.relative_strength_20d * 100).toFixed(1) + '%' : '—' },
+                  { label: 'RS IHSG',   value: mlData.market?.relative_strength_20d != null ? fmt.num(mlData.market.relative_strength_20d * 100, 1) + '%' : '—' },
                 ].map((m) => (
                   <div key={m.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', background: 'var(--surface-2)', borderRadius: 'var(--radius-sm)' }}>
                     <span style={{ fontSize: 10, color: 'var(--fg-muted)', fontWeight: 700 }}>{m.label}</span>

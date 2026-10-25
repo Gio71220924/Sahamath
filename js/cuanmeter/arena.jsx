@@ -441,7 +441,7 @@ function ArenaLadder({ snap, onPick, onPlace, onMove, onWithdraw, orders, ticker
                   {priceMarker && <i className="arena-mk">{priceMarker}</i>}
                   {price.toLocaleString('id-ID')}
                 </span>
-                <small>{percent >= 0 ? '+' : ''}{percent.toFixed(2)}%</small>
+                <small>{fmt.pct(percent)}</small>
               </span>
               <span
                 className={`arena-c-alot${mySell[price] ? ' arena-c-mine' : ''}`}
@@ -886,7 +886,7 @@ function ArenaPage() {
             {unrealized >= 0 ? '+' : ''}{arShort(unrealized)}
           </strong>
           <small className={unrealizedPercent >= 0 ? 'paper-up' : 'paper-dn'}>
-            {unrealizedPercent >= 0 ? '+' : ''}{unrealizedPercent.toFixed(2)}%
+            {fmt.pct(unrealizedPercent)}
           </small>
         </div>
         <div className="arena-account-actions">
@@ -950,7 +950,7 @@ function ArenaPage() {
                   </span>
                   <span className={changePercent >= 0 ? 'paper-up' : 'paper-dn'}>
                     {changeAmount >= 0 ? '+' : ''}{changeAmount.toLocaleString('id-ID')}
-                    {' '}({changePercent >= 0 ? '+' : ''}{changePercent.toFixed(2)}%)
+                    {' '}({fmt.pct(changePercent)})
                   </span>
                 </div>
               </div>
@@ -1027,7 +1027,7 @@ function ArenaPage() {
                 </div>
                 <div className={unrealized >= 0 ? 'paper-up' : 'paper-dn'}>
                   <strong>{unrealized >= 0 ? '+' : ''}{arRp(unrealized)}</strong>
-                  <span>{unrealizedPercent >= 0 ? '+' : ''}{unrealizedPercent.toFixed(2)}%</span>
+                  <span>{fmt.pct(unrealizedPercent)}</span>
                 </div>
               </div>
             )}

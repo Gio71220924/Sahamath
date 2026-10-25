@@ -21,6 +21,7 @@ import sys
 TRADING_DAYS = 252
 RISK_FREE = 0.06  # ~BI rate, annual
 MC_SAMPLES = 8000
+MAX_WEIGHT = 0.25  # bobot maksimal per saham di hasil optimasi
 
 # Curated per-profile universes (liquid IDX names). Custom tickers, when given,
 # are merged on top so the user can extend or replace the default set.
@@ -94,7 +95,9 @@ def refine_scipy(mean_returns, cov, n_assets, objective):
     except Exception:
         return None
 
-    bounds = tuple((0.0, 1.0) for _ in range(n_assets))
+    # Maks 25% per saham supaya alokasi tidak menumpuk di satu nama (dulu Moderat bisa 54% ADRO).
+    cap = max(MAX_WEIGHT, 1.0 / n_assets)
+    bounds = tuple((0.0, cap) for _ in range(n_assets))
     constraints = ({"type": "eq", "fun": lambda w: np.sum(w) - 1.0},)
     x0 = np.repeat(1.0 / n_assets, n_assets)
 
