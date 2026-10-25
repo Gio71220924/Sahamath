@@ -980,9 +980,9 @@ async function loadCalendarCache(forceRefresh = false) {
         })();
     }
 
-    // On a fresh deploy there is no disk cache yet. Wait once so the public site
-    // does not render a macro-only calendar while KSEI is still warming up.
-    if (forceRefresh || !fs.existsSync(CALENDAR_CACHE_FILE)) {
+    // Deploy baru belum punya cache disk, tapi tidak ditunggu: fetch KSEI di Railway ~2 menit
+    // (request menggantung/timeout). Cache dipanaskan saat boot; sementara itu balas makro + pesan.
+    if (forceRefresh) {
         await calendarRefreshInFlight;
         const refreshed = readCalendarCache();
         if (refreshed) return { ...refreshed, cached: true };
@@ -2120,11 +2120,9 @@ server.listen(PORT, () => {
     console.log('');
     scheduleDailyCalendarRefresh();
 
-    // Pre-warm kalender: disk Railway kosong tiap deploy, tanpa ini pengunjung pertama
-    // menunggu fetch KSEI (~1 menit, puluhan halaman detail berurutan).
-    loadCalendarCache()
-        .then((c) => console.log(`[Calendar] Cache warm: ${c.events.length} events.`))
-        .catch((e) => console.warn('[Calendar] Warm gagal:', e.message));
+    // Pre-warm kalender: disk Railway kosong tiap deploy. Fetch KSEI jalan di background
+    // (log "[Calendar] Background refresh selesai" saat siap).
+    loadCalendarCache().catch((e) => console.warn('[Calendar] Warm gagal:', e.message));
 
     // Pre-warm heatmap: load disk cache instantly (serve selama warm jalan), lalu refresh live.
     try {
