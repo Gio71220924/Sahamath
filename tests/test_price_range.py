@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from predict import har_sigma, price_range  # noqa: E402
+from predict import har_sigma, price_range, volatility_profile  # noqa: E402
 
 
 def ohlcv(n, seed=0):
@@ -36,4 +36,13 @@ assert r and r["p10"] < r["p50"] < r["p90"], r
 
 r = price_range(df, 5)
 assert r["p10"] < r["p50"] < r["p90"] and r["p10_pct"] < 0 < r["p90_pct"], r
+
+# volatility_profile: 2%/hari ≈ persentil 10-20, 12%/hari = 20% paling liar, data < 45 hari = None
+calm = volatility_profile(ohlcv(70, seed=1))
+assert calm and 5 <= calm["percentile"] <= 30 and not calm["top_quintile"], calm
+wild = ohlcv(70, seed=2)
+wild["Close"] = 100 * np.exp(np.cumsum(np.random.default_rng(3).normal(0, 0.12, 70)))
+v = volatility_profile(wild)
+assert v["top_quintile"] and v["percentile"] == 95, v
+assert volatility_profile(ohlcv(30)) is None
 print("ok")

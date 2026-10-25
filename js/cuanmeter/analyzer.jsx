@@ -646,6 +646,36 @@ function NotaCard({ plan, range, ticker }) {
   );
 }
 
+// Riset train_anomalies.py: 20% saham paling liar rata-rata tertinggal 1,76%/bulan dari pasar.
+function VolatilityCard({ vol, ticker }) {
+  if (!vol) return null;
+  const pct = Math.min(Math.max(vol.percentile, 2), 98);
+  return (
+    <section aria-labelledby="vol-h">
+      <h3 id="vol-h" style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--fg)' }}>Seberapa liar {ticker}</h3>
+      <p style={{ margin: '2px 0 10px', fontSize: 13, color: 'var(--fg-muted)' }}>
+        Rata-rata bergerak {vol.vol60.toFixed(1).replace('.', ',')}% per hari dalam 60 hari terakhir,
+        lebih liar dari sekitar {vol.percentile}% saham likuid IDX.
+      </p>
+      <div aria-hidden="true" style={{ position: 'relative', display: 'flex', gap: 2, height: 10 }}>
+        {[0, 1, 2, 3, 4].map((i) => (
+          <span key={i} style={{ flex: 1, background: i === 4 ? 'color-mix(in oklab, var(--danger) 35%, transparent)' : 'var(--surface-2)', border: '1px solid var(--border)' }} />
+        ))}
+        <span style={{ position: 'absolute', top: -4, bottom: -4, left: `${pct}%`, width: 3, marginLeft: -1.5, background: 'var(--fg)' }} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--fg-muted)', marginTop: 4 }}>
+        <span>Paling tenang</span><span>20% paling liar</span>
+      </div>
+      {vol.top_quintile && (
+        <p style={{ margin: '10px 0 0', fontSize: 13, fontWeight: 600, color: 'var(--danger)' }}>
+          Termasuk 20% saham paling liar. Dari 2021 sampai 2026, kelompok ini rata-rata tertinggal 1,76% per bulan
+          dari pasar, jadi pertimbangkan ukuran posisi yang lebih kecil.
+        </p>
+      )}
+    </section>
+  );
+}
+
 function OwnershipCard({ own, ticker }) {
   if (!own) return null;
   const date = (s) => new Date(s + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -1043,6 +1073,7 @@ function Analyzer({ initialTicker }) {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28, alignItems: 'flex-start' }}>
               <NotaCard plan={mlData.trading_plan} range={mlData.price_range} ticker={active} />
               <div style={{ flex: '1 1 320px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 22 }}>
+              <VolatilityCard vol={mlData.volatility} ticker={active} />
               <OwnershipCard own={mlData.ownership} ticker={active} />
               {/* Indicators mini grid */}
               <div className="analyzer-metric-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>

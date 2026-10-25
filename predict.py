@@ -243,6 +243,26 @@ def build_trading_plan(last_price, atr_val):
     }
 
 
+# ─── Seberapa liar saham ini ──────────────────────────────────────────────────
+
+# Persentil volatilitas harian 60 hari (%/hari) saham likuid IDX (>= Rp5 M/hari, harga >= 100),
+# P10..P90, median 12 bulan s/d Sep 2026. Refresh berkala dari data train_anomalies.panels().
+VOL60_PCTL = (1.86, 2.33, 2.82, 3.39, 4.10, 4.78, 5.88, 6.67, 7.99)
+
+
+def volatility_profile(ohlcv):
+    """Volatilitas 60 hari + posisinya di antara saham likuid IDX. Riset train_anomalies.py:
+    20% saham paling liar (>= P80) rata-rata tertinggal 1,76%/bulan dari pasar (t -2,3, 2021-2026)."""
+    df = ohlcv[ohlcv["Volume"] > 0]
+    r = df["Close"].pct_change().tail(60)
+    r = r[r.abs() < 0.5]  # >50% sehari = data rusak / aksi korporasi
+    if len(r) < 45:
+        return None
+    vol = float(r.std() * 100)
+    pct = float(np.interp(vol, VOL60_PCTL, np.arange(10, 100, 10), left=5, right=95))
+    return {"vol60": round(vol, 2), "percentile": int(round(pct)), "top_quintile": vol >= VOL60_PCTL[7]}
+
+
 # ─── Kepemilikan KSEI ─────────────────────────────────────────────────────────
 
 KSEI = "https://web.ksei.co.id"
@@ -396,6 +416,7 @@ def get_prediction(ticker):
             "trading_plan": plan,
             "price_range": price_range(ohlcv, 5),
             "ownership":   fetch_ownership(ticker),
+            "volatility":  volatility_profile(ohlcv),
             "indicators":  indicators,
             "chart_history": chart_data,
         }
