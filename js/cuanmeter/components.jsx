@@ -116,7 +116,7 @@ function CoinLogo({ size = 36 }) {
   const r = Math.round(size * 0.22);
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" style={{ flexShrink: 0 }}>
-      <rect width="64" height="64" rx={r} fill="#00a86b"/>
+      <rect width="64" height="64" rx={r} fill="#007f55"/>
       <line x1="13" y1="40" x2="13" y2="60" stroke="white" strokeWidth="2.2" strokeLinecap="round" opacity=".7"/>
       <rect x="8" y="46" width="10" height="10" rx="2" fill="white"/>
       <line x1="32" y1="25" x2="32" y2="58" stroke="white" strokeWidth="2.2" strokeLinecap="round" opacity=".7"/>

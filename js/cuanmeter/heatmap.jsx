@@ -193,7 +193,8 @@ function SectorBlock({ sector, x, y, w, h, onSelect, range, tf }) {
     mSum += st.mcap;
   }
   const sectorPct = mSum > 0 ? wSum / mSum : 0;
-  const pctColor = sectorPct > 0.05 ? '#7CFFB2' : sectorPct < -0.05 ? '#FF9A9A' : 'var(--fg-faint)';
+  // warna tema, bukan hijau/merah muda tetap: label sektor ada di latar putih pada tema terang
+  const pctColor = sectorPct > 0.05 ? 'var(--success)' : sectorPct < -0.05 ? 'var(--danger)' : 'var(--fg-muted)';
   return (
     <div className="heatmap-sector" style={{ left: x, top: y, width: w, height: h }}>
       <div className="heatmap-sector-label">

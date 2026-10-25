@@ -39,11 +39,11 @@ body[data-theme="fintech"] {
   --fg-faint: #8a9994;
   --border: #e1e7e4;
   --border-strong: #cfd6d2;
-  --primary: #00a86b;
-  --primary-hover: #008f5a;
+  --primary: #007f55;  /* kontras 5:1 dengan teks putih (WCAG AA); dulu #00a86b = 3,1:1 */
+  --primary-hover: #006b47;
   --primary-soft: #e6f6ef;
   --primary-fg: #ffffff;
-  --success: #00a86b;
+  --success: #007f55;
   --danger: #e23e57;
   --warning: #f59e0b;
   --info: #2563eb;
@@ -113,11 +113,11 @@ body[data-theme="glass"] {
   --fg-faint: #7a8a83;
   --border: rgba(255, 255, 255, 0.6);
   --border-strong: rgba(255, 255, 255, 0.85);
-  --primary: #00a86b;
-  --primary-hover: #008c58;
+  --primary: #007f55;  /* kontras 5:1 dengan teks putih (WCAG AA); dulu #00a86b = 3,1:1 */
+  --primary-hover: #006b47;
   --primary-soft: rgba(0, 168, 107, 0.18);
   --primary-fg: #ffffff;
-  --success: #00a86b;
+  --success: #007f55;
   --danger: #e23e57;
   --warning: #f59e0b;
   --info: #2563eb;
