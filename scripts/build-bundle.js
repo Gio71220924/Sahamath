@@ -58,6 +58,8 @@ const COPY_ENTRIES = [
   'heatmap.py',
   'watchlist.py',
   'fundamentals.py',
+  'dividend_history.py',
+  'portfolio.py',
   'data',
 ];
 

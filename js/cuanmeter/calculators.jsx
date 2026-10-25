@@ -1169,7 +1169,7 @@ function Dividen() {
               <span
                 style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.1em', opacity: 0.9 }}
               >
-                NET YIELD · TAHUNAN
+                Yield bersih per tahun
               </span>
             </div>
             <div
@@ -1179,7 +1179,7 @@ function Dividen() {
               <AnimatedNumber value={result.netYieldPct} format={(n) => n.toFixed(2) + '%'} />
             </div>
             <div style={{ fontSize: 14, opacity: 0.9, marginTop: 12 }}>
-              Gross yield {result.grossYieldPct.toFixed(2)}% · setelah PPh 10%
+              Yield kotor {result.grossYieldPct.toFixed(2)}%, sebelum PPh 10%
             </div>
           </div>
 
@@ -1232,9 +1232,83 @@ function parseDps(e) {
   return Number.isFinite(v) && v > 0 ? v : null;
 }
 
+/* Riwayat capture satu saham dari /dividend-history: beli close cum date, jual close ex date,
+   + dividen setelah pajak 10%, fee broker pengguna. Return absolut (riset di atas relatif IHSG). */
+const DIV_TAX = 0.10;
+
+function captureNet(e, fee) {
+  const fb = (Number(fee.buy) || 0) / 100;
+  const fs = (Number(fee.sell) || 0) / 100;
+  return ((e.ex_close * (1 - fs) + e.amount * (1 - DIV_TAX)) / (e.cum_close * (1 + fb)) - 1) * 100;
+}
+
+function CaptureHistory({ ticker }) {
+  const [data, setData] = useStateC(null);
+  useEffectC(() => {
+    let alive = true;
+    fetch('/dividend-history?ticker=' + ticker)
+      .then((r) => r.json())
+      .then((d) => { if (alive) setData(d); })
+      .catch(() => { if (alive) setData({ status: 'error' }); });
+    return () => { alive = false; };
+  }, [ticker]);
+
+  const muted = { margin: 0, fontSize: 14, color: 'var(--fg-muted)', lineHeight: 1.55 };
+  if (!data) return <p style={muted}>Memuat riwayat dividen {ticker}...</p>;
+  if (data.status !== 'ok') return <p role="alert" style={{ ...muted, color: 'var(--danger)' }}>Riwayat {ticker} belum bisa dimuat. Coba lagi nanti.</p>;
+  if (!data.events.length) return <p style={muted}>Belum ada riwayat dividen {ticker} dalam 6 tahun terakhir.</p>;
+
+  const fee = getFees();
+  const ev = data.events.map((e) => ({ ...e, net: captureNet(e, fee), yld: (e.amount / e.cum_close) * 100 })).reverse();
+  const wins = ev.filter((e) => e.net > 0).length;
+  const avg = ev.reduce((s, e) => s + e.net, 0) / ev.length;
+  const pct = (v) => {
+    const r = Math.round(v * 100) / 100; // tanda dari angka yang ditampilkan, bukan "+0,00%"
+    return (r > 0 ? '+' : r < 0 ? '−' : '') + Math.abs(r).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+  };
+  const date = (s) => new Date(s + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  const cell = { padding: '6px 0 6px 16px', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontSize: 13, whiteSpace: 'nowrap' };
+
+  return (
+    // sticky + lebar layar: tabel induk 760px bisa digeser di HP, riwayat tetap terbaca utuh
+    <div style={{ position: 'sticky', left: 0, width: 'min(560px, calc(100vw - 32px))' }}>
+      <p style={{ ...muted, color: 'var(--fg)' }}>
+        Kalau dulu dibeli di cum date dan dijual di ex date: untung <strong>{wins} dari {ev.length}</strong> kali,
+        rata-rata <strong style={{ color: avg >= 0 ? 'var(--success)' : 'var(--danger)' }}>{pct(avg)}</strong> per event.
+      </p>
+      <p style={{ ...muted, fontSize: 13, marginTop: 4 }}>
+        Setelah pajak dividen 10% dan fee broker kamu ({String(fee.buy).replace('.', ',')}% beli, {String(fee.sell).replace('.', ',')}% jual).
+        Kejadian per saham sedikit, jadi lihat polanya, bukan angka pastinya.
+      </p>
+      <table style={{ marginTop: 10, borderCollapse: 'collapse' }}>
+        <caption style={{ position: 'absolute', left: -9999 }}>Riwayat dividend capture {ticker}</caption>
+        <thead>
+          <tr style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
+            <th scope="col" style={{ ...cell, textAlign: 'left', paddingLeft: 0, fontFamily: 'inherit', fontWeight: 600 }}>Ex date</th>
+            <th scope="col" style={{ ...cell, fontFamily: 'inherit', fontWeight: 600 }}>Dividen</th>
+            <th scope="col" style={{ ...cell, fontFamily: 'inherit', fontWeight: 600 }}>Yield</th>
+            <th scope="col" style={{ ...cell, fontFamily: 'inherit', fontWeight: 600 }}>Hasil bersih</th>
+          </tr>
+        </thead>
+        <tbody>
+          {ev.map((e) => (
+            <tr key={e.ex} style={{ borderTop: '1px solid var(--border)' }}>
+              <td style={{ ...cell, textAlign: 'left', paddingLeft: 0, fontFamily: 'inherit' }}>{date(e.ex)}</td>
+              <td style={cell}>{e.amount.toLocaleString('id-ID', { maximumFractionDigits: 2 })}</td>
+              <td style={cell}>{e.yld.toLocaleString('id-ID', { maximumFractionDigits: 1 })}%</td>
+              <td style={{ ...cell, fontWeight: 700, color: e.net >= 0 ? 'var(--success)' : 'var(--danger)' }}>{pct(e.net)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function DividendCalendar({ onPick }) {
   const [rows, setRows] = useStateC(null);
   const [error, setError] = useStateC(null);
+  const [openRow, setOpenRow] = useStateC(null);
 
   useEffectC(() => {
     let alive = true;
@@ -1305,8 +1379,11 @@ function DividendCalendar({ onPick }) {
                 const liquid = (r.value || 0) >= CAPTURE_MIN_VALUE && r.price >= CAPTURE_MIN_PRICE;
                 const candidate = highYield && liquid;
                 const status = r.yld == null ? 'Harga belum ada' : !highYield ? 'Yield terlalu kecil' : !liquid ? 'Kurang likuid' : 'Kandidat';
+                const key = r.ticker + r.cum;
+                const open = openRow === key;
                 return (
-                  <tr key={r.ticker + r.cum} style={{ borderTop: '1px solid var(--border)' }}>
+                  <React.Fragment key={key}>
+                  <tr style={{ borderTop: '1px solid var(--border)' }}>
                     <th scope="row" style={{ textAlign: 'left', padding: '12px 12px 12px 0', fontWeight: 800, color: 'var(--fg)' }}>
                       {r.ticker}
                       <div style={{ fontWeight: 400, fontSize: 12, color: 'var(--fg-muted)' }}>{r.name}</div>
@@ -1324,13 +1401,26 @@ function DividendCalendar({ onPick }) {
                       {status}
                     </td>
                     <td style={{ ...td, paddingRight: 0 }}>
-                      {r.price && (
-                        <button type="button" className="btn btn-secondary" style={{ minHeight: 36, padding: '0 12px', fontSize: 13 }} onClick={() => onPick(r.price, r.dps)}>
-                          Hitung
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                        <button type="button" className="btn btn-secondary" aria-expanded={open} style={{ minHeight: 36, padding: '0 12px', fontSize: 13 }} onClick={() => setOpenRow(open ? null : key)}>
+                          Riwayat
                         </button>
-                      )}
+                        {r.price && (
+                          <button type="button" className="btn btn-secondary" style={{ minHeight: 36, padding: '0 12px', fontSize: 13 }} onClick={() => onPick(r.price, r.dps)}>
+                            Hitung
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
+                  {open && (
+                    <tr>
+                      <td colSpan={7} style={{ padding: '4px 0 20px' }}>
+                        <CaptureHistory ticker={r.ticker} />
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
                 );
               })}
             </tbody>

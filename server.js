@@ -57,7 +57,7 @@ let heatmapCache = null; // { data, cachedAt }
 const watchlistCache = new Map(); // ticker -> { data, at }
 const WATCHLIST_TTL_MS = 60 * 1000;
 const fundamentalsCache = new Map(); // ticker -> { data, at }
-const FUNDAMENTALS_TTL_MS = 24 * 60 * 60 * 1000;
+const TICKER_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // fundamentals + riwayat dividen
 const BOARD_CACHE_FILE = path.join(DATA_DIR, 'board-cache.json');
 
 // Curated fallback for the liquid main-board (Utama) tickers the app surfaces
@@ -1431,39 +1431,45 @@ function handleWatchlist(query, res) {
     });
 }
 
-// ─── /fundamentals  →  Key fundamentals via yfinance .info (cache 24 jam) ─────
-function handleFundamentals(query, res) {
+// ─── Script Python per ticker, JSON di stdout, cache 24 jam ──────────────────
+// /fundamentals (yfinance .info) dan /dividend-history (event dividen + close cum/ex).
+const dividendHistoryCache = new Map(); // ticker -> { data, at }
+
+function servePythonTicker(script, cache, label, query, res) {
     const ticker = String(query.ticker || '').toUpperCase().trim();
     if (!/^[A-Z]{4}$/.test(ticker)) {
         return sendJSON(res, 400, { status: 'error', message: 'Ticker tidak valid' });
     }
-    const c = fundamentalsCache.get(ticker);
-    if (c && Date.now() - c.at < FUNDAMENTALS_TTL_MS) { return sendJSON(res, 200, c.data); }
+    const c = cache.get(ticker);
+    if (c && Date.now() - c.at < TICKER_CACHE_TTL_MS) { return sendJSON(res, 200, c.data); }
 
-    const python = spawn('python', [path.join(ROOT, 'fundamentals.py'), ticker]);
+    const python = spawn('python', [path.join(ROOT, script), ticker]);
     let output = '';
     let done = false;
     const timer = setTimeout(() => {
         python.kill();
-        if (!done) { done = true; sendJSON(res, 504, { status: 'error', message: 'Timeout memuat fundamental' }); }
+        if (!done) { done = true; sendJSON(res, 504, { status: 'error', message: `Timeout memuat ${label}` }); }
     }, 20000);
 
     python.stdout.on('data', (d) => { output += d.toString(); });
-    python.stderr.on('data', (d) => { console.error(`[Fundamentals] ${d}`); });
+    python.stderr.on('data', (d) => { console.error(`[${script}] ${d}`); });
     python.on('close', () => {
         if (done) return;
         done = true;
         clearTimeout(timer);
         try {
             const result = JSON.parse(output.trim());
-            if (result.status === 'ok') fundamentalsCache.set(ticker, { data: result, at: Date.now() });
+            if (result.status === 'ok') cache.set(ticker, { data: result, at: Date.now() });
             sendJSON(res, 200, result);
         } catch (e) {
-            console.error(`[Fundamentals] Parse error: ${e.message}`);
-            sendJSON(res, 502, { status: 'error', message: 'Gagal memuat fundamental' });
+            console.error(`[${script}] Parse error: ${e.message}`);
+            sendJSON(res, 502, { status: 'error', message: `Gagal memuat ${label}` });
         }
     });
 }
+
+const handleFundamentals = (query, res) => servePythonTicker('fundamentals.py', fundamentalsCache, 'fundamental', query, res);
+const handleDividendHistory = (query, res) => servePythonTicker('dividend_history.py', dividendHistoryCache, 'riwayat dividen', query, res);
 
 // ─── /portfolio  →  Risk-profile portfolio optimizer (MPT) ───────────────────
 const RISK_PROFILES = new Set(['conservative', 'moderate', 'aggressive']);
@@ -2028,6 +2034,13 @@ const server = http.createServer((req, res) => {
         const ip = req.socket.remoteAddress;
         if (isRateLimited(ip)) { sendJSON(res, 429, { error: 'Too many requests' }); return; }
         return handleFundamentals(parsed.query, res);
+    }
+
+    // API: /dividend-history
+    if (req.method === 'GET' && pathname === '/dividend-history') {
+        const ip = req.socket.remoteAddress;
+        if (isRateLimited(ip)) { sendJSON(res, 429, { error: 'Too many requests' }); return; }
+        return handleDividendHistory(parsed.query, res);
     }
 
     // API: /portfolio

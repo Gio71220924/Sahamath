@@ -13,6 +13,7 @@
     { "source": "/ai-analysis", "destination": "https://sahamath-production.up.railway.app/ai-analysis" },
     { "source": "/ipo-news", "destination": "https://sahamath-production.up.railway.app/ipo-news" },
     { "source": "/fundamentals", "destination": "https://sahamath-production.up.railway.app/fundamentals" },
+    { "source": "/dividend-history", "destination": "https://sahamath-production.up.railway.app/dividend-history" },
     { "source": "/portfolio", "destination": "https://sahamath-production.up.railway.app/portfolio" },
     { "source": "/heatmap", "destination": "https://sahamath-production.up.railway.app/heatmap" },
     { "source": "/watchlist", "destination": "https://sahamath-production.up.railway.app/watchlist" },
