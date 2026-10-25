@@ -233,9 +233,9 @@ function PaperTradePage({ onNavigate }) {
   };
 
   return (
-    <CalcScreen icon="wallet" tag="SIMULASI · PAPER TRADING"
-      title={<>Latihan <span style={{ color: 'var(--primary)' }}>trading</span> tanpa rugi.</>}
-      subtitle="Portfolio virtual pakai harga real. Beli/jual, lihat P&L. Tersimpan di browser ini.">
+    <CalcScreen
+      title="Latihan trading tanpa uang asli."
+      subtitle="Portofolio virtual dengan harga asli. Beli, jual, dan lihat untung-ruginya. Tersimpan di browser ini.">
 
       <div className="paper-summary">
         <div className="paper-sumbox"><span>Cash</span><strong>{fmtRpShort(s.cash)}</strong></div>

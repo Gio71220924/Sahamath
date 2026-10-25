@@ -171,7 +171,7 @@ function AllocationBars({ weights }) {
 function MetricCard({ label, value, sub, color }) {
   return (
     <div style={{ padding: 16, background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', flex: '1 1 140px' }}>
-      <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--fg-muted)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--fg-muted)', marginBottom: 6 }}>{label}</div>
       <div className="mono tnum" style={{ fontSize: 24, fontWeight: 800, color: color || 'var(--fg)', lineHeight: 1 }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: 'var(--fg-faint)', marginTop: 4 }}>{sub}</div>}
     </div>
@@ -240,10 +240,8 @@ function RiskPage() {
 
   return (
     <CalcScreen
-      icon="shield"
-      tag="ANALISA · PROFIL RISIKO"
-      title={<>Profil <span style={{ color: 'var(--primary)' }}>risiko</span> kamu.</>}
-      subtitle="Jawab 5 pertanyaan singkat. Kami susun rekomendasi alokasi saham berbasis Modern Portfolio Theory (Sharpe & Markowitz). Edukasi, bukan ajakan beli."
+      title="Profil risiko kamu."
+      subtitle="Jawab 5 pertanyaan singkat, lalu lihat contoh alokasi saham berbasis Modern Portfolio Theory (Sharpe dan Markowitz). Edukasi, bukan ajakan beli."
     >
       {phase === 'quiz' && (
         <div style={{ maxWidth: 680, display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -332,8 +330,8 @@ function RiskPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 880 }}>
           {meta && (
             <div style={{ padding: 24, background: 'var(--surface)', border: `1.5px solid ${meta.color}`, borderRadius: 'var(--radius)' }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--fg-muted)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
-                Profil kamu · skor {total}/15
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--fg-muted)', marginBottom: 6 }}>
+                Profil kamu, skor {total}/15
               </div>
               <div style={{ fontSize: 28, fontWeight: 900, color: meta.color, marginBottom: 8 }}>{meta.label}</div>
               <p style={{ margin: 0, fontSize: 15, color: 'var(--fg-muted)', lineHeight: 1.5 }}>{meta.blurb}</p>

@@ -355,8 +355,6 @@ function GuideCard({ guide, onOpen }) {
             fontSize: 11,
             color: 'var(--fg-muted)',
             fontWeight: 700,
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
           }}
         >
           {guide.read}
@@ -370,8 +368,6 @@ function GuideCard({ guide, onOpen }) {
           fontSize: 11,
           color: 'var(--primary)',
           fontWeight: 800,
-          letterSpacing: '0.08em',
-          textTransform: 'uppercase',
         }}
       >
         {GUIDE_CATEGORIES.find((c) => c.id === guide.cat)?.label || guide.cat}
@@ -461,8 +457,6 @@ function GuideReader({ guide, onClose }) {
                   fontSize: 11,
                   color: 'var(--primary)',
                   fontWeight: 800,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
                 }}
               >
                 {GUIDE_CATEGORIES.find((c) => c.id === guide.cat)?.label}
@@ -611,8 +605,6 @@ function GuideReader({ guide, onClose }) {
                 style={{
                   fontSize: 12,
                   fontWeight: 800,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
                   color: 'var(--fg-muted)',
                 }}
               >
@@ -695,10 +687,6 @@ function GuidesPage() {
     <main style={{ padding: '48px 0 80px' }}>
       <div className="container">
         <div className="fade-up" style={{ marginBottom: 40, maxWidth: 720 }}>
-          <div className="badge" style={{ marginBottom: 16 }}>
-            <Icon name="book" size={12} />
-            <span>PANDUAN · BELAJAR DULU, CUAN KEMUDIAN</span>
-          </div>
           <h1
             style={{
               fontSize: 'clamp(36px, 5vw, 56px)',
@@ -707,14 +695,11 @@ function GuidesPage() {
               lineHeight: 1.05,
             }}
           >
-            Semua yang lo butuhin
-            <br />
-            buat{' '}
-            <span style={{ color: 'var(--primary)' }}>jadi trader yang gak ngutang</span>.
+            Panduan saham untuk pemula.
           </h1>
           <p style={{ fontSize: 17, color: 'var(--fg-muted)', lineHeight: 1.5, margin: 0 }}>
-            8 panduan praktis dari basic sampai strategi. Bahasa Gen Z, sumbernya jelas, gak
-            kelamaan.
+            8 panduan praktis dari dasar sampai strategi. Bahasa sehari-hari, sumbernya jelas,
+            tidak bertele-tele.
           </p>
         </div>
 

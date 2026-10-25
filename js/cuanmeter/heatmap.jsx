@@ -355,10 +355,8 @@ function HeatmapPage({ onNavigate }) {
 
   return (
     <CalcScreen
-      icon="fire"
-      tag="MARKET · HEATMAP"
-      title={<>Heatmap <span style={{ color: 'var(--primary)' }}>sektor</span> IDX.</>}
-      subtitle="Sektor & saham mana yang panas. Ukuran kotak = market cap, warna = perubahan harga (pilih timeframe). Tap saham buat lihat detail."
+      title="Heatmap sektor IDX."
+      subtitle="Besar kotak menunjukkan market cap, warnanya perubahan harga sesuai timeframe. Ketuk saham untuk detail."
     >
       <div className="heatmap-toolbar">
         <div className="heatmap-toolbar-left">

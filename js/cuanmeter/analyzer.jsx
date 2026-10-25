@@ -840,7 +840,6 @@ function Analyzer({ initialTicker }) {
 
   return (
     <CalcScreen
-      icon="chart"
       title="Ukur risiko per saham IDX."
       subtitle="Chart, fundamental, katalis dari berita, dan trading plan dari ATR. Cek risikonya sebelum kamu masuk."
     >
@@ -1010,7 +1009,7 @@ function Analyzer({ initialTicker }) {
         </div>
         <div className="badge">
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)' }} />{' '}
-          {tvPrice ? 'Real · TradingView' : 'EOD · 7 hari terakhir'}
+          {tvPrice ? 'Harga live TradingView' : 'Data penutupan 7 hari terakhir'}
         </div>
       </div>
 

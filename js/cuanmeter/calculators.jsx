@@ -71,17 +71,11 @@ function NumberInput({ label, value, onChange, prefix, suffix, hint, placeholder
 }
 
 /* ---------- screen wrapper ---------- */
-function CalcScreen({ icon, tag, title, subtitle, children, className = '' }) {
+function CalcScreen({ title, subtitle, children, className = '' }) {
   return (
     <main className={`calculator-screen ${className}`.trim()} style={{ padding: '48px 0 80px' }}>
       <div className="container">
         <div className="fade-up" style={{ marginBottom: 40, maxWidth: 720 }}>
-          {tag && (
-            <div className="badge" style={{ marginBottom: 16 }}>
-              <Icon name={icon} size={12} />
-              <span>{tag}</span>
-            </div>
-          )}
           <h1
             style={{
               fontSize: 'clamp(36px, 5vw, 56px)',
@@ -117,8 +111,6 @@ function ResultStat({ label, value, accent, big, mono = true, hint }) {
         style={{
           fontSize: 11,
           color: 'var(--fg-muted)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
           fontWeight: 700,
           marginBottom: 6,
         }}
@@ -172,16 +164,8 @@ function AveragePrice() {
 
   return (
     <CalcScreen
-      icon="calc"
-      tag="AVERAGE PRICE · KALKULATOR"
-      title={
-        <>
-          Hitung <span style={{ color: 'var(--primary)' }}>average price</span>
-          <br />
-          portfolio-mu.
-        </>
-      }
-      subtitle="Tambahin semua transaksi beli-mu, kita kasih harga rata-rata break-even buat tau kapan harus average down atau cabut."
+      title="Hitung harga rata-rata portofoliomu."
+      subtitle="Masukkan semua transaksi beli, lalu lihat harga rata-rata dan titik impasnya sebelum memutuskan average down atau keluar."
     >
       <div className="calc-grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 24 }}>
         {/* Inputs */}
@@ -292,7 +276,7 @@ function AveragePrice() {
                 marginBottom: 8,
               }}
             >
-              HARGA AVERAGE
+              Harga rata-rata
             </div>
             <div
               className="mono tnum"
@@ -465,17 +449,8 @@ function ARAARB() {
 
   return (
     <CalcScreen
-      icon="arrows"
-      tag="AUTO REJECTION · IDX 2026"
-      title={
-        <>
-          Cek <span style={{ color: 'var(--success)' }}>ARA</span> &{' '}
-          <span style={{ color: 'var(--danger)' }}>ARB</span>
-          <br />
-          real-time.
-        </>
-      }
-      subtitle="Cari kode saham untuk auto-detect harga & papan, atau input manual. ARA berjenjang per tier, ARB flat 15% (Akselerasi: ARB 10%)."
+      title="Cek batas ARA dan ARB."
+      subtitle="Cari kode saham untuk mengisi harga dan papan otomatis, atau isi manual. ARA berjenjang per tier harga, ARB 15% (papan Akselerasi 10%)."
     >
       <div className="calc-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: 24 }}>
         <div className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -553,7 +528,7 @@ function ARAARB() {
                   fontSize: 10, fontWeight: 800, letterSpacing: '0.06em',
                   background: 'var(--primary-soft)', color: 'var(--primary)',
                   padding: '2px 8px', borderRadius: 999,
-                }}>AUTO-DETECT</span>
+                }}>Terdeteksi otomatis</span>
               )}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
@@ -581,7 +556,7 @@ function ARAARB() {
 
           {/* Info tier */}
           <div style={{ background: 'var(--surface-2)', padding: 14, borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
-            <div style={{ fontSize: 11, color: 'var(--fg-muted)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
+            <div style={{ fontSize: 11, color: 'var(--fg-muted)', fontWeight: 700, marginBottom: 6 }}>
               {BOARD_CONFIG[papan].label}
             </div>
             <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--fg)' }}>
@@ -731,16 +706,8 @@ function ProfitCalc() {
 
   return (
     <CalcScreen
-      icon="wallet"
-      tag="PROFIT / LOSS · CALCULATOR"
-      title={
-        <>
-          Hitung <span style={{ color: 'var(--primary)' }}>profit bersih</span>
-          <br />
-          bukan profit imajinasi.
-        </>
-      }
-      subtitle="Setelah dipotong fee broker (beli & jual), kamu cuan berapa? Plus break-even price biar tau kapan boleh jual."
+      title="Hitung profit bersih setelah fee."
+      subtitle="Setelah dipotong fee beli dan jual, untungmu berapa? Plus harga impas supaya tahu kapan boleh jual."
     >
       <div className="calc-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 24 }}>
         <div className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -763,13 +730,11 @@ function ProfitCalc() {
             style={{
               fontSize: 14,
               color: 'var(--fg-muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
               fontWeight: 700,
               margin: 0,
             }}
           >
-            Fee Broker
+            Fee broker
           </h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <NumberInput label="Fee Beli" value={feeBuy} onChange={setFeeBuy} suffix="%" />
@@ -823,7 +788,7 @@ function ProfitCalc() {
                   opacity: 0.9,
                 }}
               >
-                {isProfit ? 'CUAN BERSIH' : 'NYANGKUT (LOSS)'}
+                {isProfit ? 'Untung bersih' : 'Rugi bersih'}
               </span>
             </div>
             <div
@@ -867,16 +832,14 @@ function ProfitCalc() {
                   style={{
                     fontSize: 11,
                     color: 'var(--primary)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
                     fontWeight: 800,
                     marginBottom: 4,
                   }}
                 >
-                  BREAK-EVEN PRICE
+                  Harga impas
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--fg-muted)' }}>
-                  Harga jual minimum biar gak rugi
+                  Harga jual minimum supaya tidak rugi
                 </div>
               </div>
               <div
@@ -933,16 +896,8 @@ function Amunisi() {
 
   return (
     <CalcScreen
-      icon="shield"
-      tag="POSITION SIZING · MANAJEMEN RISIKO"
-      title={
-        <>
-          Berapa <span style={{ color: 'var(--primary)' }}>amunisi</span> aman
-          <br />
-          buat di-snipe?
-        </>
-      }
-      subtitle="Dengan risk per trade 1–2% modal, kamu boleh salah berkali-kali tanpa rekening sekarat. Hitung lot maksimal sebelum entry."
+      title="Berapa lot yang aman dibeli?"
+      subtitle="Dengan risiko 1–2% modal per trade, kamu bisa salah berkali-kali tanpa rekening habis. Hitung lot maksimal sebelum entry."
     >
       <div className="calc-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 24 }}>
         <div className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -988,8 +943,6 @@ function Amunisi() {
             style={{
               fontSize: 14,
               color: 'var(--fg-muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
               fontWeight: 700,
               margin: 0,
             }}
@@ -1027,7 +980,7 @@ function Amunisi() {
               <span
                 style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.1em', opacity: 0.9 }}
               >
-                AMUNISI MAKSIMAL
+                Amunisi maksimal
               </span>
             </div>
             <div
@@ -1061,8 +1014,6 @@ function Amunisi() {
                 fontSize: 12,
                 color: 'var(--fg-muted)',
                 fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
                 marginBottom: 12,
               }}
             >
@@ -1131,16 +1082,8 @@ function Dividen() {
 
   return (
     <CalcScreen
-      icon="coin"
-      tag="DIVIDEN YIELD · PASSIVE INCOME"
-      title={
-        <>
-          Pasif income dari <span style={{ color: 'var(--primary)' }}>dividen</span>
-          <br />
-          tiap tahun masuk rekening.
-        </>
-      }
-      subtitle="Hitung yield bersih setelah PPh Final 10%, plus simulasi dividen bulanan kalau dibagi rata. Buat sultan-in-the-making."
+      title="Hitung dividen yang masuk rekening."
+      subtitle="Yield bersih setelah PPh final 10%, plus simulasi kalau dividennya dibagi rata per bulan."
     >
       <div className="calc-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 24 }}>
         <div className="card" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>

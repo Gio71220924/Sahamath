@@ -862,9 +862,7 @@ function ArenaPage() {
   return (
     <CalcScreen
       className="arena-screen"
-      icon="fire"
-      tag="ARENA - MARKET SIMULATOR"
-      title={<>Arena <span style={{ color: 'var(--primary)' }}>FO</span> melawan bot.</>}
+      title="Arena FO melawan bot."
       subtitle="Latihan membaca order book dan mengeksekusi limit atau market order. Harga setelah market dimulai bersifat sintetis, bukan transaksi bursa nyata."
     >
       <div className="arena-account-summary">
