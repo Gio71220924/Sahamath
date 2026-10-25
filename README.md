@@ -29,7 +29,7 @@ Sahamath adalah web kalkulator saham yang mudah dipakai untuk trader Indonesia. 
 
 Sahamath memakai frontend ringan berbasis React tanpa bundler production yang kompleks. UI dimuat dari `index.html`, styling utama ada di CSS, dan routing memakai hash route di browser.
 
-- **Frontend**: React UMD, ReactDOM UMD, Babel Standalone, HTML, CSS, JavaScript.
+- **Frontend**: React UMD, HTML, CSS, JavaScript. Lokal (`npm start`) memakai Babel Standalone di browser biar cepat diubah; production (Vercel) memakai satu bundle hasil esbuild + React production.
 - **UI styling**: CSS custom properties, responsive layout, dark/light theme support.
 - **Backend**: Node.js HTTP server lewat `server.js`.
 - **Python runtime**: `predict.py` (trading plan ATR + kisaran harga 5 hari) dan `screener.py` (swing setup). Tanpa model ML.
@@ -94,7 +94,6 @@ https://sahamath-production.up.railway.app
 Catatan penting:
 
 - Vercel tidak menjalankan `server.js` sebagai backend permanen, jadi backend tetap di Railway.
-- `netlify.toml` masih ada sebagai cadangan; hapus kalau Netlify sudah tidak dipakai.
 
 Untuk fitur **Analisis AI** (Gemini), isi environment variable:
 
@@ -114,7 +113,7 @@ npm run refresh:ipo
 
 Jalankan command itu dari laptop/lokal untuk mengambil e-ipo, lalu hasilnya disimpan ke `data/ipo-calendar.json`. Backend `/ipo-news` akan membaca file curated itu. Jika file kosong, endpoint memakai RSS sebagai alert berita IPO yang belum diverifikasi. Live scrape di backend hanya aktif jika `IPO_ALLOW_LIVE_SCRAPE=1`.
 
-Build frontend (dipakai Vercel lewat `vercel.json`, output ke `dist`):
+Build frontend (dipakai Vercel lewat `vercel.json`, output ke `dist`: JSX dikompilasi jadi `js/cuanmeter/app.bundle.js`):
 
 ```bash
 npm run build:static

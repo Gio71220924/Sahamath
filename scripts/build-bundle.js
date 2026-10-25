@@ -142,4 +142,7 @@ function build() {
   console.log('[build] Run: node dist/server.js');
 }
 
-build();
+// build-static.js (Vercel) reuses the bundle + production index.html.
+module.exports = { buildBundle, buildIndexHtml, BUNDLE_REL };
+
+if (require.main === module) build();
