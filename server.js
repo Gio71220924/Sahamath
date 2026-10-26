@@ -2029,6 +2029,16 @@ const server = http.createServer((req, res) => {
         return handleWatchlist(parsed.query, res);
     }
 
+    // API: /health — cek cepat server hidup + zona waktu ("hari ini" kalender harus WIB, lihat Dockerfile TZ)
+    if (req.method === 'GET' && pathname === '/health') {
+        return sendJSON(res, 200, {
+            status: 'ok',
+            tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            utc_offset_min: -new Date().getTimezoneOffset(),
+            local_date: ymdLocal(),
+        });
+    }
+
     // API: /fundamentals
     if (req.method === 'GET' && pathname === '/fundamentals') {
         const ip = req.socket.remoteAddress;
