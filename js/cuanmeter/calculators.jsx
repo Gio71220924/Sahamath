@@ -14,9 +14,10 @@ const { useState: useStateC, useMemo: useMemoC, useEffect: useEffectC, useRef: u
 function NumberInput({ label, value, onChange, prefix, suffix, hint, placeholder }) {
   // Teks mentah selama diketik, supaya "0," tidak langsung diformat jadi "0" (koma desimal hilang).
   const [text, setText] = useStateC(null);
+  const id = React.useId(); // label terhubung ke input: dibaca pembaca layar, bisa dicari getByLabel
   return (
     <div className="input-group">
-      {label && <label className="label">{label}</label>}
+      {label && <label className="label" htmlFor={id}>{label}</label>}
       <div style={{ position: 'relative' }}>
         {prefix && (
           <span
@@ -35,6 +36,7 @@ function NumberInput({ label, value, onChange, prefix, suffix, hint, placeholder
           </span>
         )}
         <input
+          id={id}
           className="input"
           type="text"
           inputMode="decimal"
