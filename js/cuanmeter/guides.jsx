@@ -20,11 +20,11 @@ const GUIDES = [
     id: 'ara-arb',
     cat: 'basic',
     icon: 'arrows',
-    title: 'Apa itu ARA & ARB?',
-    excerpt: 'Aturan auto-rejection di IDX yang wajib lo ngerti sebelum nge-haka saham gocap.',
+    title: 'Apa itu ARA dan ARB?',
+    excerpt: 'Batas naik dan turun harian di IDX, dan kenapa saham gocap bisa mentok.',
     read: '5 min',
     body: [
-      { type: 'p', text: 'ARA (Auto Rejection Atas) dan ARB (Auto Rejection Bawah) adalah batas maksimal kenaikan/penurunan harga saham harian. Kalau harga nyentuh batas ini, transaksi otomatis ditolak Bursa.' },
+      { type: 'p', text: 'ARA (Auto Rejection Atas) dan ARB (Auto Rejection Bawah) adalah batas maksimal kenaikan/penurunan harga saham harian. Kalau harga menyentuh batas ini, transaksi otomatis ditolak Bursa.' },
       { type: 'h', text: 'Aturan ARA — Berjenjang per Tier Harga' },
       { type: 'p', text: 'ARA dihitung berdasarkan range harga saham (asimetris), berlaku sejak September 2023:' },
       { type: 'list', items: [
@@ -46,7 +46,7 @@ const GUIDES = [
       { type: 'p', text: 'ARA dibulatkan ke bawah (floor) agar tidak melebihi batas. ARB dibulatkan ke atas (ceil) agar tidak menembus floor perlindungan.' },
       { type: 'h', text: 'Contoh Praktis' },
       { type: 'p', text: 'Saham harga Rp 468 (Tier 2, ARA 25%, ARB 15%). Raw ARA = 585 → zona Rp 500–2.000, fraksi Rp 5 → ARA = 585. Raw ARB = 397,8 → fraksi Rp 2 → ARB = 398. Efektif: naik max 25%, turun max ~14,96%.' },
-      { type: 'tip', text: 'ARA berturut-turut bisa jadi sinyal saham digoreng atau ada sentimen kuat (corporate action, rights issue). Cek fundamental dulu sebelum ikut-ikutan.' },
+      { type: 'tip', text: 'ARA berturut-turut bisa jadi sinyal saham digoreng atau ada sentimen kuat (corporate action, rights issue). Cek fundamental dulu sebelum ikut membeli.' },
     ],
     sources: [
       { name: 'BNI Sekuritas (Bions) — Auto Reject ARA & ARB Saham', url: 'https://www.bions.id/edukasi/saham/auto-reject-ara-arb-saham' },
@@ -59,26 +59,26 @@ const GUIDES = [
     id: 'average-down',
     cat: 'strategy',
     icon: 'calc',
-    title: 'Average Down: Pahlawan atau Jebakan?',
-    excerpt: 'Kapan boleh average down dan kapan harusnya cut-loss. Spoiler: gak semua bottom itu real bottom.',
+    title: 'Average down: kapan masuk akal?',
+    excerpt: 'Kapan menambah posisi saat harga turun, dan kapan lebih baik cut loss.',
     read: '7 min',
     body: [
-      { type: 'p', text: 'Average down = beli ulang saham yang harganya turun dari harga beli pertama, biar harga rata-rata jadi lebih rendah. Kedengaran genius, tapi banyak retail yang malah nyangkut makin dalem karena nge-average tanpa logika.' },
-      { type: 'h', text: 'Boleh average down KALAU' },
+      { type: 'p', text: 'Average down adalah membeli lagi saham yang harganya turun dari harga beli pertama, supaya harga rata-rata lebih rendah. Terdengar masuk akal, tapi banyak investor ritel justru makin dalam ruginya karena menambah posisi tanpa alasan yang jelas.' },
+      { type: 'h', text: 'Boleh average down kalau' },
       { type: 'list', items: [
         'Fundamental perusahaan masih sehat (earnings tumbuh, debt manageable)',
         'Penurunan harga karena sentimen makro/sektoral, bukan masalah perusahaan',
-        'Lo masih punya cash >= 50% dari posisi saat ini (jangan all-in)',
+        'Kamu masih punya cash minimal 50% dari posisi saat ini (jangan all-in)',
         'Harga sudah di area support / valuasi murah (PER atau PBV menarik)',
       ]},
-      { type: 'h', text: 'JANGAN average down kalau' },
+      { type: 'h', text: 'Jangan average down kalau' },
       { type: 'list', items: [
         'Earnings perusahaan turun atau rugi 2 kuartal beruntun',
         'Ada masalah governance (manajemen ribut, fraud, suspend)',
         'Harga turun karena breakdown teknikal di support kuat',
-        'Lo udah all-in dari awal — yang dibutuhin cash, bukan beli lagi',
+        'Kamu sudah all-in dari awal: yang dibutuhkan cash, bukan beli lagi',
       ]},
-      { type: 'tip', text: 'Aturan praktis: jangan average down lebih dari 2x. Kalau setelah 2x average masih turun >10%, ada masalah besar — cut loss > selamat.' },
+      { type: 'tip', text: 'Aturan praktis: jangan average down lebih dari 2x. Kalau setelah 2x average masih turun >10%, ada masalah besar, dan cut loss lebih aman.' },
     ],
     sources: [
       { name: 'Stockbit Snips — Average Down Saham', url: 'https://snips.stockbit.com/investasi/avarage-down-saham' },
@@ -90,23 +90,23 @@ const GUIDES = [
     id: 'position-sizing',
     cat: 'risk',
     icon: 'shield',
-    title: 'Position Sizing 101',
-    excerpt: 'Kenapa "all-in" itu cara tercepat buat porto sultan jadi porto receh. Pakai 2% rule.',
+    title: 'Position sizing: berapa lot yang aman',
+    excerpt: 'Kenapa all-in bikin porto cepat habis, dan cara pakai batas rugi 2% per trade.',
     read: '6 min',
     body: [
-      { type: 'p', text: 'Position sizing adalah seni nentuin BERAPA BANYAK uang yang lo masukin ke satu trade — bukan saham mana yang lo beli. Trader pro 80% fokus ke risk management, 20% ke pemilihan saham.' },
+      { type: 'p', text: 'Position sizing adalah cara menentukan berapa banyak uang yang kamu masukkan ke satu trade, bukan saham mana yang kamu beli. Trader pro 80% fokus ke risk management, 20% ke pemilihan saham.' },
       { type: 'h', text: '2% Rule' },
-      { type: 'p', text: 'Maksimum loss per trade = 2% dari total modal. Artinya kalau modal Rp 50 juta, maksimum loss yang lo terima per trade = Rp 1 juta.' },
+      { type: 'p', text: 'Maksimum loss per trade = 2% dari total modal. Artinya kalau modal Rp 50 juta, rugi maksimum yang kamu terima per trade = Rp 1 juta.' },
       { type: 'h', text: 'Cara hitung' },
       { type: 'list', items: [
-        'Tentukan entry price dan stop loss SEBELUM beli',
+        'Tentukan entry price dan stop loss sebelum beli',
         'Risk per share = entry − stop loss',
         'Max shares = (modal × 2%) / risk per share',
         'Bulatkan ke bawah ke kelipatan 100 (1 lot)',
       ]},
       { type: 'h', text: 'Contoh' },
       { type: 'p', text: 'Modal Rp 50jt, mau beli BBRI di Rp 4.500 dengan stop loss Rp 4.300. Risk per share = Rp 200. Max risk = Rp 1jt. Max shares = 5.000 lembar = 50 lot. Modal terpakai = Rp 22,5jt (45% modal).' },
-      { type: 'tip', text: 'Trader pemula: pakai 1% rule. Boleh salah 50x sebelum modal habis — cukup buat belajar.' },
+      { type: 'tip', text: 'Trader pemula: pakai 1% rule. Kamu bisa salah 50 kali sebelum modal habis, cukup untuk belajar.' },
     ],
     sources: [
       { name: 'Ajaib — Apa Itu Position Sizing?', url: 'https://ajaib.co.id/belajar/investasi/apa-itu-position-sizing' },
@@ -118,14 +118,14 @@ const GUIDES = [
     id: 'dividen-vs-cg',
     cat: 'income',
     icon: 'coin',
-    title: 'Bedanya Dividen vs Capital Gain',
-    excerpt: 'Dua cara cuan dari saham. Yang satu cair tahunan, yang satu cair pas lo jual.',
+    title: 'Dividen atau capital gain?',
+    excerpt: 'Dua cara untung dari saham: satu cair saat dividen dibagi, satu saat kamu jual.',
     read: '4 min',
     body: [
-      { type: 'p', text: 'Cuan dari saham ada dua sumber: capital gain (selisih harga jual − harga beli) dan dividen (bagi hasil dari laba perusahaan).' },
+      { type: 'p', text: 'Untung dari saham ada dua sumber: capital gain (selisih harga jual − harga beli) dan dividen (bagi hasil dari laba perusahaan).' },
       { type: 'h', text: 'Capital Gain' },
       { type: 'list', items: [
-        'Cair pas lo JUAL saham di harga lebih tinggi',
+        'Cair saat kamu menjual saham di harga lebih tinggi',
         'Pajak: PPh Final 0.1% dari nilai jual (otomatis dipotong broker)',
         'Cocok buat trader, swing, growth investor',
       ]},
@@ -135,7 +135,7 @@ const GUIDES = [
         'Pajak: PPh Final 10% (bisa 0% kalau diinvestasikan ulang sesuai PMK 18/2021)',
         'Cocok buat dividend investor, pensiunan, passive income',
       ]},
-      { type: 'tip', text: 'Strategi favorit dividen-investor IDX: BBRI, TLKM, ITMG, UNVR, PTBA. Yield 4-9% net per tahun, lumayan buat ngalahin deposito.' },
+      { type: 'tip', text: 'Saham yang sering dipilih investor dividen IDX: BBRI, TLKM, ITMG, UNVR, PTBA. Yield bersih 4–9% per tahun bisa mengalahkan bunga deposito, tapi tidak dijamin tiap tahun.' },
     ],
     sources: [
       { name: 'Mirae Asset — Cara Menghitung Dividen Saham', url: 'https://mstock.miraeasset.co.id/blog/cara-menghitung-dividen-saham/' },
@@ -147,11 +147,11 @@ const GUIDES = [
     id: 'bandarmology',
     cat: 'strategy',
     icon: 'chart',
-    title: 'Bandarmology: Ngintilin Smart Money',
-    excerpt: 'Cara baca broker summary buat tau siapa yang lagi akumulasi & distribusi.',
+    title: 'Bandarmology: membaca jejak investor besar',
+    excerpt: 'Cara membaca broker summary untuk melihat siapa yang sedang akumulasi atau distribusi.',
     read: '8 min',
     body: [
-      { type: 'p', text: 'Bandarmology = analisa pergerakan broker besar (smart money/bandar) buat ngintip arah harga. Premis-nya: bandar punya info & modal lebih, jadi ngikutin mereka biasanya cuan.' },
+      { type: 'p', text: 'Bandarmology = analisa pergerakan broker besar (smart money/bandar) untuk membaca arah harga. Asumsinya: bandar punya informasi dan modal lebih besar, jadi pergerakannya sering mendahului harga. Tidak selalu benar.' },
       { type: 'h', text: 'Komponen utama' },
       { type: 'list', items: [
         'Net Foreign — selisih buy & sell broker asing. Positif = asing akumulasi.',
@@ -159,9 +159,9 @@ const GUIDES = [
         'Net Retail — kebalikan: positif berarti retail net-buy, sering jadi sinyal "smart money sell to retail".',
       ]},
       { type: 'h', text: 'Pola "Akumulasi Diam-diam"' },
-      { type: 'p', text: 'Harga bergerak sideways volume tipis, tapi top buyer 5 broker konsisten beli pelan-pelan di harga rendah. Indikasi bandar lagi ngumpulin barang sebelum mark-up.' },
+      { type: 'p', text: 'Harga bergerak sideways volume tipis, tapi top buyer 5 broker konsisten beli pelan-pelan di harga rendah. Indikasi bandar sedang mengumpulkan saham sebelum harga dinaikkan.' },
       { type: 'h', text: 'Pola "Distribusi"' },
-      { type: 'p', text: 'Harga naik tipis tapi volume meledak, top seller sama broker yang akumulasi minggu lalu — bandar lagi cuan-out ke retail.' },
+      { type: 'p', text: 'Harga naik tipis tapi volume meledak, top seller sama broker yang akumulasi minggu lalu : bandar sedang menjual ke investor ritel.' },
       { type: 'tip', text: 'Bandarmology bukan kristal bola. Selalu kombinasikan dengan analisa teknikal dan fundamental. Top broker hari ini bisa beda sama besok.' },
     ],
     sources: [
@@ -174,11 +174,11 @@ const GUIDES = [
     id: 'pajak-saham',
     cat: 'tax',
     icon: 'wallet',
-    title: 'Pajak Saham di Indonesia',
-    excerpt: 'PPh Final, capital gain tax, dividen tax — biar gak kaget pas lapor SPT.',
+    title: 'Pajak saham di Indonesia',
+    excerpt: 'PPh final, pajak dividen, dan yang perlu dilaporkan di SPT.',
     read: '6 min',
     body: [
-      { type: 'p', text: 'Pajak transaksi saham di Indonesia simpel sebenernya — PPh Final, dipotong otomatis. Tapi banyak retail yang gak tau kalau dividen masih perlu dilaporkan di SPT.' },
+      { type: 'p', text: 'Pajak transaksi saham di Indonesia sebenarnya sederhana: PPh final yang dipotong otomatis. Tapi banyak investor ritel yang tidak tahu kalau dividen masih perlu dilaporkan di SPT.' },
       { type: 'h', text: 'Saat menjual saham' },
       { type: 'list', items: [
         'PPh Final 0,1% × nilai transaksi jual',
@@ -205,15 +205,15 @@ const GUIDES = [
     id: 'fundamental-101',
     cat: 'basic',
     icon: 'book',
-    title: 'Analisa Fundamental: EPS, PER, PBV, ROE & Teman-temannya',
-    excerpt: 'Panduan lengkap baca laporan keuangan saham IDX — dari EPS sampai NPM, cara kombinasikan rasio, dan contoh nyata BBRI vs TLKM.',
+    title: 'Analisa fundamental: EPS, PER, PBV, ROE, dan rasio lain',
+    excerpt: 'Cara membaca laporan keuangan saham IDX, dari EPS sampai NPM, dengan contoh BBRI dan TLKM.',
     read: '12 min',
     body: [
-      { type: 'p', text: 'Analisa fundamental = ngecek "kondisi kesehatan" perusahaan dari laporan keuangan. Bukan cuma satu angka — ini soal kombinasi rasio + tren multi-tahun.' },
+      { type: 'p', text: 'Analisa fundamental adalah memeriksa "kondisi kesehatan" perusahaan dari laporan keuangan. Bukan cuma satu angka — ini soal kombinasi rasio + tren multi-tahun.' },
       { type: 'h', text: '1. EPS — Laba per Lembar Saham' },
       { type: 'p', text: 'EPS (Earnings per Share) = Laba Bersih / Jumlah Saham Beredar. Ini dasar dari semua rasio profitabilitas. EPS naik konsisten tiap tahun = sinyal positif. EPS negatif (rugi) = merah besar.' },
       { type: 'list', items: [
-        'EPS BBRI 2023: ~Rp 497/lembar → earnings mesin',
+        'EPS BBRI 2023: ~Rp 497/lembar → laba besar dan stabil',
         'EPS negatif 2 kuartal beruntun: waspadai, fundamentalnya lagi bermasalah',
         'Bandingkan EPS tahun ini vs 3 tahun lalu — tren yang penting, bukan angka sesaat',
       ]},
@@ -227,7 +227,7 @@ const GUIDES = [
       ]},
       { type: 'p', text: 'Contoh: BBRI harga Rp 5.000, EPS Rp 497 → PER ≈ 10×. Untuk bank BUMN sekelas BBRI, ini tergolong wajar hingga sedikit murah.' },
       { type: 'h', text: '3. PBV — Harga vs Nilai Buku' },
-      { type: 'p', text: 'PBV (Price to Book Value) = Harga Saham / Nilai Buku per Saham. Nilai buku = total aset dikurangi total liabilitas dibagi jumlah saham. PBV < 1 artinya lo beli saham di bawah nilai aset bersihnya.' },
+      { type: 'p', text: 'PBV (Price to Book Value) = Harga Saham / Nilai Buku per Saham. Nilai buku = total aset dikurangi total liabilitas dibagi jumlah saham. PBV < 1 artinya kamu membeli saham di bawah nilai aset bersihnya.' },
       { type: 'list', items: [
         'PBV < 1: potensi murah — tapi cek kualitas asetnya (jangan-jangan aset macet)',
         'PBV 1–2: area wajar untuk bank dan properti',
@@ -257,10 +257,10 @@ const GUIDES = [
         'Sektor bank: NPM wajar 20–35%',
         'Sektor retail/consumer: NPM wajar 5–15%',
         'NPM turun 2 kuartal beruntun padahal revenue naik = waspada, ada cost problem',
-        'TLKM NPM ~14%, BBRI NPM ~29% (berbeda sektor, gak bisa dibanding langsung)',
+        'TLKM NPM ~14%, BBRI NPM ~29% (berbeda sektor, tidak bisa dibandingkan langsung)',
       ]},
       { type: 'h', text: '7. Current Ratio — Kemampuan Bayar Utang Jangka Pendek' },
-      { type: 'p', text: 'Current Ratio = Aset Lancar / Liabilitas Lancar. Angka di atas 1 artinya aset lancar cukup buat nutup utang jangka pendek. Terlalu tinggi (>4) juga tidak efisien.' },
+      { type: 'p', text: 'Current Ratio = Aset Lancar / Liabilitas Lancar. Angka di atas 1 artinya aset lancar cukup untuk menutup utang jangka pendek. Terlalu tinggi (>4) juga tidak efisien.' },
       { type: 'list', items: [
         'Current Ratio < 1: lampu merah — perusahaan bisa kesulitan bayar utang jatuh tempo',
         'Current Ratio 1.5–3: zona sehat untuk industri manufaktur dan consumer',
@@ -276,7 +276,7 @@ const GUIDES = [
         'NPM tidak turun → margin tidak tergerus biaya',
       ]},
       { type: 'p', text: 'Contoh saham yang lewat semua filter ini di IDX: BBCA, BBRI, SIDO, ICBP. Bukan rekomendasi beli — tapi contoh perusahaan dengan fundamental solid yang bisa dijadikan benchmark belajar.' },
-      { type: 'tip', text: 'Cek laporan keuangan minimal 3 tahun terakhir, bukan cuma kuartal terakhir. Rasio sesaat bisa menipu; trennya yang ngomong kebenaran.' },
+      { type: 'tip', text: 'Cek laporan keuangan minimal 3 tahun terakhir, bukan cuma kuartal terakhir. Rasio sesaat bisa menipu; yang penting trennya.' },
     ],
     sources: [
       { name: 'Mirae Asset — Cara Membaca Rasio Keuangan Saham', url: 'https://mstock.miraeasset.co.id/blog/cara-menghitung-harga-wajar-saham/' },
@@ -290,17 +290,17 @@ const GUIDES = [
     id: 'cut-loss',
     cat: 'risk',
     icon: 'arrow_left',
-    title: 'Cut Loss Bukan Aib',
-    excerpt: 'Disiplin cut loss adalah hal yang misahin trader pemula sama trader yang survive >5 tahun.',
+    title: 'Cut loss bukan aib',
+    excerpt: 'Disiplin cut loss yang membedakan trader pemula dengan trader yang bertahan lama.',
     read: '5 min',
     body: [
-      { type: 'p', text: 'Cut loss = jual saham di harga lebih rendah dari beli, sebelum kerugian membesar. Banyak retail anti cut-loss karena ego ("nanti juga balik lagi"). Padahal disiplin cut loss = kunci survival.' },
+      { type: 'p', text: 'Cut loss = jual saham di harga lebih rendah dari beli, sebelum kerugian membesar. Banyak retail anti cut-loss karena ego ("nanti juga balik lagi"). Padahal disiplin cut loss adalah kunci bertahan.' },
       { type: 'h', text: 'Kapan harus cut loss' },
       { type: 'list', items: [
         'Harga break support kuat dengan volume tinggi',
         'Fundamental perusahaan turun (earnings rugi, ada fraud)',
-        'Stop loss rule lo udah ke-trigger (misal −7% dari entry)',
-        'Asumsi entry awal udah gak valid lagi',
+        'Batas stop loss kamu sudah tersentuh (misal −7% dari entry)',
+        'Alasan awal kamu membeli sudah tidak berlaku',
       ]},
       { type: 'h', text: 'Math of Recovery' },
       { type: 'list', items: [
@@ -309,7 +309,7 @@ const GUIDES = [
         'Loss 50% → butuh +100% (DOUBLE) buat balik modal',
         'Loss 80% → butuh +400% buat balik modal',
       ]},
-      { type: 'tip', text: 'Set stop loss SEBELUM lo beli, bukan setelah lo nyangkut. Pakai limit/stop order biar gak goyang sama emosi.' },
+      { type: 'tip', text: 'Tentukan stop loss sebelum membeli, bukan setelah nyangkut. Pakai order limit/stop supaya keputusan tidak goyah karena emosi.' },
     ],
     sources: [
       { name: 'Stockbit Snips — Apa Itu Cut Loss?', url: 'https://snips.stockbit.com/investasi/apa-itu-cut-loss' },
@@ -407,7 +407,11 @@ function GuideReader({ guide, onClose }) {
     const prevHtml = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    document.querySelector('[data-guide-close]')?.focus();
     return () => {
+      document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevBody;
       document.documentElement.style.overflow = prevHtml;
     };
@@ -430,6 +434,9 @@ function GuideReader({ guide, onClose }) {
     >
       <div
         className="card"
+        role="dialog"
+        aria-modal="true"
+        aria-label={guide.title}
         onClick={(e) => e.stopPropagation()}
         style={{
           maxWidth: 760,
@@ -483,6 +490,7 @@ function GuideReader({ guide, onClose }) {
           <button
             onClick={onClose}
             aria-label="Tutup panduan"
+            data-guide-close
             style={{
               width: 40,
               height: 40,
@@ -667,9 +675,10 @@ function GuideReader({ guide, onClose }) {
 }
 
 /* ---------- Guides page ---------- */
-function GuidesPage() {
+function GuidesPage({ initialGuide }) {
   const [cat, setCat] = useStateG('all');
-  const [open, setOpen] = useStateG(null);
+  // dari kartu panduan di halaman depan: langsung buka artikelnya
+  const [open, setOpen] = useStateG(() => GUIDES.find((g) => g.id === initialGuide) || null);
   const [search, setSearch] = useStateG('');
 
   const filtered = useMemoG(() => {

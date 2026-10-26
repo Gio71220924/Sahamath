@@ -54,6 +54,7 @@ const PAGES_REL = 'js/cuanmeter/pages.bundle.js'; // sama dengan PAGES_BUNDLE di
 const COPY_ENTRIES = [
   'CSS',
   'favicon.svg',
+  'og-image.png',
   'robots.txt',
   'sitemap.xml',
   'server.js',

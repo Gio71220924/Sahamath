@@ -494,13 +494,13 @@ function ArenaLadder({ snap, onPick, onPlace, onMove, onWithdraw, orders, ticker
 
       <div className="arena-book-actions">
         <button type="button" className="arena-wd-buy" onClick={() => onWithdraw && onWithdraw('buy')}>
-          Withdraw All Buy
+          Batalkan semua beli
         </button>
         <button type="button" className="arena-wd-all" onClick={() => onWithdraw && onWithdraw()}>
-          Withdraw All
+          Batalkan semua
         </button>
         <button type="button" className="arena-wd-sell" onClick={() => onWithdraw && onWithdraw('sell')}>
-          Withdraw All Sell
+          Batalkan semua jual
         </button>
       </div>
     </section>
@@ -1180,14 +1180,14 @@ function ArenaPage() {
                     className="arena-max"
                     onClick={() => maxBuy > 0 && setLot(String(maxBuy))}
                   >
-                    Max Buy ({maxBuy.toLocaleString('id-ID')})
+                    Beli maksimal ({maxBuy.toLocaleString('id-ID')})
                   </button>
                   <button
                     type="button"
                     className="arena-max"
                     onClick={() => position.lot > 0 && setLot(String(position.lot))}
                   >
-                    Max Sell ({position.lot.toLocaleString('id-ID')})
+                    Jual maksimal ({position.lot.toLocaleString('id-ID')})
                   </button>
                 </div>
 

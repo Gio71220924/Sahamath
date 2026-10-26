@@ -214,8 +214,11 @@ function AveragePrice() {
                   placeholder="0"
                 />
                 <button
+                  type="button"
                   onClick={() => remove(i)}
                   disabled={rows.length === 1}
+                  aria-label={`Hapus transaksi ${i + 1}`}
+                  title={rows.length === 1 ? 'Minimal satu transaksi' : `Hapus transaksi ${i + 1}`}
                   style={{
                     width: 52,
                     height: 52,

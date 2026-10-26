@@ -263,13 +263,13 @@ const NAV_GROUPS = [
     items: [
       { id: 'analyzer', label: 'Analyzer' },
       { id: 'heatmap',  label: 'Heatmap' },
-      { id: 'profilrisiko', label: 'Profil Risiko' },
+      { id: 'profilrisiko', label: 'Profil risiko' },
     ],
   },
   {
     label: 'Simulasi',
     items: [
-      { id: 'papertrade', label: 'Paper Trade' },
+      { id: 'papertrade', label: 'Paper trade' },
       { id: 'arena',      label: 'Arena FO' },
     ],
   },

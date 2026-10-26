@@ -756,7 +756,7 @@ function MarketCalendarWidget() {
                     background: 'var(--bg)', color: page === 0 ? 'var(--fg-faint)' : 'var(--fg)',
                     cursor: page === 0 ? 'default' : 'pointer',
                   }}
-                >‹ Prev</button>
+                >‹ Sebelumnya</button>
                 <button
                   type="button"
                   onClick={() => setPage(p => p + 1)}
@@ -767,7 +767,7 @@ function MarketCalendarWidget() {
                     background: 'var(--bg)', color: (page + 1) * PAGE_SIZE >= events.length ? 'var(--fg-faint)' : 'var(--fg)',
                     cursor: (page + 1) * PAGE_SIZE >= events.length ? 'default' : 'pointer',
                   }}
-                >Next ›</button>
+                >Berikutnya ›</button>
               </div>
             </div>
           )}
@@ -814,10 +814,11 @@ function ToolsGrid({ onNavigate }) {
 
 /* ---------- Panduan: baris seperti ToolsGrid ---------- */
 const PREVIEW_GUIDES = [
-  { title: 'Apa itu ARA dan ARB?',             desc: 'Batas naik dan turun harian di IDX, dan kenapa saham gocap bisa mentok.',     read: 5 },
-  { title: 'Average down: kapan masuk akal?',  desc: 'Kapan menambah posisi saat harga turun, dan kapan lebih baik cut loss.',      read: 7 },
-  { title: 'Position sizing',                  desc: 'Kenapa all-in bikin porto cepat habis, dan cara pakai batas rugi 2% per trade.', read: 6 },
-  { title: 'Dividen atau capital gain?',       desc: 'Dua cara untung dari saham: satu cair saat dividen dibagi, satu saat kamu jual.', read: 4 },
+  // id + judul sama dengan GUIDES di guides.jsx; klik membuka artikelnya
+  { id: 'ara-arb',         title: 'Apa itu ARA dan ARB?',                    desc: 'Batas naik dan turun harian di IDX, dan kenapa saham gocap bisa mentok.',     read: 5 },
+  { id: 'average-down',    title: 'Average down: kapan masuk akal?',         desc: 'Kapan menambah posisi saat harga turun, dan kapan lebih baik cut loss.',      read: 7 },
+  { id: 'position-sizing', title: 'Position sizing: berapa lot yang aman',   desc: 'Kenapa all-in bikin porto cepat habis, dan cara pakai batas rugi 2% per trade.', read: 6 },
+  { id: 'dividen-vs-cg',   title: 'Dividen atau capital gain?',              desc: 'Dua cara untung dari saham: satu cair saat dividen dibagi, satu saat kamu jual.', read: 4 },
 ];
 
 function GuidesSection({ onNavigate }) {
@@ -832,7 +833,7 @@ function GuidesSection({ onNavigate }) {
         <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 440px), 1fr))', columnGap: 48 }}>
           {PREVIEW_GUIDES.map((g) => (
             <li key={g.title} style={{ borderBottom: '1px solid var(--border)' }}>
-              <button type="button" onClick={() => onNavigate('guides')} style={{ width: '100%', padding: '16px 0', textAlign: 'left', font: 'inherit', color: 'var(--fg)' }}>
+              <button type="button" onClick={() => onNavigate('guides', g.id)} style={{ width: '100%', padding: '16px 0', textAlign: 'left', font: 'inherit', color: 'var(--fg)' }}>
                 <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16 }}>
                   <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>{g.title}</span>
                   <span className="mono" style={{ fontSize: 13, color: 'var(--fg-muted)', whiteSpace: 'nowrap' }}>{g.read} menit</span>

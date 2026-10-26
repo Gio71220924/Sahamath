@@ -165,7 +165,7 @@ function App() {
       case 'profilrisiko': return <RiskPage />;
       case 'papertrade': return <PaperTradePage onNavigate={navigate} />;
       case 'arena':    return <ArenaPage onNavigate={navigate} />;
-      case 'guides':   return <GuidesPage />;
+      case 'guides':   return <GuidesPage initialGuide={pendingTicker} />;
       default:         return <LandingPage onNavigate={navigate} />;
     }
   })();

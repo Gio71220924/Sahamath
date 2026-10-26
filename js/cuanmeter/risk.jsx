@@ -320,7 +320,7 @@ function RiskPage() {
                 border: answered ? undefined : '1px solid var(--border)',
               }}
             >
-              Lihat rekomendasi →
+              Lihat contoh alokasi →
             </button>
           </div>
         </div>
@@ -364,14 +364,14 @@ function RiskPage() {
               </div>
 
               <div style={{ padding: 24, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}>
-                <h3 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 800 }}>Alokasi rekomendasi</h3>
+                <h3 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 800 }}>Contoh alokasi</h3>
                 <AllocationBars weights={data.recommended.weights} />
               </div>
 
               <div style={{ padding: 24, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}>
                 <h3 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 800 }}>Efficient frontier</h3>
                 <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--fg-muted)' }}>
-                  Tiap titik = satu portofolio simulasi (warna = Sharpe). <span style={{ color: '#6366f1', fontWeight: 700 }}>★ Max-Sharpe</span> · <span style={{ color: 'var(--success)', fontWeight: 700 }}>● Min-Vol</span> · <span style={{ fontWeight: 700 }}>◆ Rekomendasi (lingkaran)</span>
+                  Tiap titik = satu portofolio simulasi (warna = Sharpe). <span style={{ color: '#6366f1', fontWeight: 700 }}>★ Max-Sharpe</span> · <span style={{ color: 'var(--success)', fontWeight: 700 }}>● Min-Vol</span> · <span style={{ fontWeight: 700 }}>◆ Contoh alokasi (lingkaran)</span>
                 </p>
                 <FrontierChart frontier={data.frontier} maxSharpe={data.max_sharpe} minVol={data.min_vol} recommended={data.recommended} />
               </div>

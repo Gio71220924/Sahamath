@@ -11,7 +11,7 @@ const { writeBundles, buildIndexHtml } = require('./build-bundle');
 
 const rootDir = path.resolve(__dirname, '..');
 const distDir = path.join(rootDir, 'dist');
-const ASSETS = ['CSS', 'favicon.svg', 'robots.txt', 'sitemap.xml'];
+const ASSETS = ['CSS', 'favicon.svg', 'og-image.png', 'robots.txt', 'sitemap.xml'];
 
 fs.rmSync(distDir, { recursive: true, force: true });
 
