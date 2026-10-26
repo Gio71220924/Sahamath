@@ -102,6 +102,7 @@ function seedBoardCache() {
   } catch (e) { logError('Board', e); }
 }
 const KSEI_DETAIL_PAGE_LIMIT = 80;
+const KSEI_DETAIL_CONCURRENCY = 4;
 const KSEI_EVENT_LIMIT = 160;
 const KSEI_RETRY_COUNT = 2;
 const KSEI_RETRY_DELAY_MS = 450;
@@ -759,10 +760,11 @@ async function fetchKseiCalendarEvents() {
     const months = [today, addMonths(today, 1)];
     const detailItems = [];
 
-    for (const monthDate of months) {
+    const monthJsons = await Promise.all(months.map(monthDate => {
         const month = String(monthDate.getMonth() + 1).padStart(2, '0');
-        const year = monthDate.getFullYear();
-        const raw = await httpsGetRawWithRetry('web.ksei.co.id', `/ksei_calendar/get_json/event-${month}-${year}-all.json`);
+        return httpsGetRawWithRetry('web.ksei.co.id', `/ksei_calendar/get_json/event-${month}-${monthDate.getFullYear()}-all.json`);
+    }));
+    for (const raw of monthJsons) {
         const json = JSON.parse(raw);
         for (const group of (json.data || [])) {
             for (const item of (group.events || [])) {
@@ -781,20 +783,28 @@ async function fetchKseiCalendarEvents() {
             if (pa !== pb) return pa - pb;
             return a.date.localeCompare(b.date);
         });
-    const events = [];
+    // Beberapa worker paralel (serial ~2 menit di Railway); hasil disimpan per indeks supaya urutan tetap.
+    const pages = uniqueDetails.slice(0, KSEI_DETAIL_PAGE_LIMIT);
+    const results = [];
     let skippedDetails = 0;
-    for (const item of uniqueDetails.slice(0, KSEI_DETAIL_PAGE_LIMIT)) {
-        try {
-            const html = await httpsGetRawWithRetry('web.ksei.co.id', item.path);
-            events.push(...parseKseiDetail(html, item.date, item.path));
-        } catch (e) {
-            skippedDetails++;
-            if (!isTransientNetworkError(e) && !item.path.includes('/eff/')) {
-                console.error('[Calendar] KSEI detail error:', e.message);
+    let next = 0;
+    await Promise.all(Array.from({ length: KSEI_DETAIL_CONCURRENCY }, async () => {
+        while (next < pages.length) {
+            const i = next++;
+            const item = pages[i];
+            try {
+                const html = await httpsGetRawWithRetry('web.ksei.co.id', item.path);
+                results[i] = parseKseiDetail(html, item.date, item.path);
+            } catch (e) {
+                skippedDetails++;
+                if (!isTransientNetworkError(e) && !item.path.includes('/eff/')) {
+                    console.error('[Calendar] KSEI detail error:', e.message);
+                }
             }
+            await wait(120);
         }
-        await wait(120);
-    }
+    }));
+    const events = results.filter(Boolean).flat();
 
     if (skippedDetails > 0) {
         console.warn(`[Calendar] KSEI skipped ${skippedDetails} detail page(s) after retry.`);
