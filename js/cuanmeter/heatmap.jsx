@@ -117,17 +117,13 @@ function mixRGB(a, b, t) {
   return `rgb(${r},${g},${bl})`;
 }
 function colorFor(pct, range = 4) {
-  const GRAY = [120, 120, 128];
-  const GREEN = [0, 168, 107];
-  const RED = [220, 52, 52];
+  // cukup gelap supaya teks putih ≥ 4,5:1 di semua campuran (WCAG AA)
+  const GRAY = [104, 104, 112];
+  const GREEN = [0, 133, 84];
+  const RED = [204, 40, 44];
   const r = range > 0 ? range : 4;
   const t = Math.max(-r, Math.min(r, pct)) / r; // -1..1; 0 selalu abu (sign terjaga)
   return t >= 0 ? mixRGB(GRAY, GREEN, t) : mixRGB(GRAY, RED, -t);
-}
-function textOn(rgbStr) {
-  const m = rgbStr.match(/\d+/g).map(Number);
-  const lum = (0.299 * m[0] + 0.587 * m[1] + 0.114 * m[2]) / 255;
-  return lum > 0.6 ? '#0b0b0c' : '#ffffff';
 }
 function fmtMcap(v) {
   if (v >= 1e12) return (v / 1e12).toFixed(1).replace('.', ',') + ' T';
@@ -151,7 +147,7 @@ function Tile({ stock, x, y, w, h, onSelect, range, tf }) {
     <button
       type="button"
       className="heatmap-tile"
-      style={{ left: x, top: y, width: w, height: h, background: bg, color: textOn(bg) }}
+      style={{ left: x, top: y, width: w, height: h, background: bg, color: '#fff' }}
       onClick={() => onSelect(stock)}
       title={`${stock.ticker} · ${pctText} · Rp ${stock.price.toLocaleString('id-ID')}`}
     >

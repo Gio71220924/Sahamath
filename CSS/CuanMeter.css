@@ -36,7 +36,7 @@ body[data-theme="fintech"] {
   --surface-hover: #f0f4f2;
   --fg: #0a1f1a;
   --fg-muted: #5d6c66;
-  --fg-faint: #8a9994;
+  --fg-faint: #62716c;
   --border: #e1e7e4;
   --border-strong: #cfd6d2;
   --primary: #007f55;  /* kontras 5:1 dengan teks putih (WCAG AA); dulu #00a86b = 3,1:1 */
@@ -71,7 +71,7 @@ body[data-theme="dark"] {
   --surface-hover: #182030;
   --fg: #e8efe9;
   --fg-muted: #8a9590;
-  --fg-faint: #5b6661;
+  --fg-faint: #808b87;
   --border: #1c2430;
   --border-strong: #2a3543;
   --primary: #00e08c;
@@ -110,7 +110,7 @@ body[data-theme="glass"] {
   --surface-hover: rgba(255, 255, 255, 0.7);
   --fg: #0d2a20;
   --fg-muted: #4a5d56;
-  --fg-faint: #7a8a83;
+  --fg-faint: #5b6b64;
   --border: rgba(255, 255, 255, 0.6);
   --border-strong: rgba(255, 255, 255, 0.85);
   --primary: #007f55;  /* kontras 5:1 dengan teks putih (WCAG AA); dulu #00a86b = 3,1:1 */
@@ -149,7 +149,7 @@ body[data-theme="aurora"] {
   --surface-hover: rgba(255, 255, 255, 0.08);
   --fg: #f0f5ff;
   --fg-muted: #a4afca;
-  --fg-faint: #6b7895;
+  --fg-faint: #7a87a5;
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
   --primary: #00ff9f;
@@ -2709,6 +2709,7 @@ body[data-theme="dark"] .arena-mini-seg button.on {
   gap: 4px;
 }
 .heatmap-tf-toggle .strategy-mode-btn {
+  min-height: 28px; /* target sentuh ≥ 24px */
   padding: 5px 13px;
   font-size: 12px;
   font-weight: 800;
@@ -2729,6 +2730,7 @@ body[data-theme="dark"] .arena-mini-seg button.on {
   margin-right: 2px;
 }
 .heatmap-scale-toggle .strategy-mode-btn {
+  min-height: 28px;
   padding: 3px 10px;
   font-size: 11px;
 }
