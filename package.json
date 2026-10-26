@@ -10,6 +10,7 @@
         "test": "npm run test:ipo && npm run test:arena",
         "test:ipo": "node --test tests/ipo-utils.spec.js",
         "test:arena": "node --test tests/arena-utils.spec.js tests/arena-market.spec.js tests/arena-flow.spec.js tests/arena-agents.spec.js",
+        "test:e2e": "playwright test",
         "start": "node server.js",
         "dev": "node --watch server.js"
     },
@@ -24,6 +25,7 @@
     "author": "Sahamath",
     "license": "MIT",
     "devDependencies": {
+        "@playwright/test": "1.63.0",
         "esbuild": "^0.24.0",
         "react": "18.3.1",
         "react-dom": "18.3.1"

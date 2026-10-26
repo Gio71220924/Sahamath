@@ -59,6 +59,8 @@ env/
 # Testing
 coverage/
 *.test.js
+test-results/
+playwright-report/
 
 # Lighthouse reports
 *-report.html
